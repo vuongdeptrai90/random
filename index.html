@@ -111,6 +111,7 @@ font-weight:bold;
 cursor:pointer;
 box-shadow:0 0 20px #00eaff;
 transition:.3s;
+color: white;
 }
 
 button:hover{
@@ -119,6 +120,13 @@ transform:scale(1.05);
 
 button:active{
 transform:scale(.95);
+}
+
+button:disabled {
+background: #555;
+box-shadow: none;
+cursor: not-allowed;
+transform: none;
 }
 
 .result{
@@ -155,9 +163,24 @@ background:linear-gradient(45deg,#00ff88,#00cc55);
 box-shadow:0 0 20px #00ff88;
 }
 
-#count{
+.stats-container {
+margin-top: 15px;
+display: flex;
+justify-content: space-around;
+background: rgba(0,0,0,0.3);
+padding: 10px;
+border-radius: 12px;
+}
+
+#count {
 color:#00ff88;
-font-size:22px;
+font-size:20px;
+font-weight:bold;
+}
+
+#remaining {
+color:#00eaff;
+font-size:20px;
 font-weight:bold;
 }
 
@@ -255,11 +278,15 @@ Vương Hóng Hớt
 
 </div>
 
-<p>
-🎯 Đã random:
-<span id="count">0</span>
-lần
-</p>
+<!-- HIỂN THỊ THỐNG KÊ LƯỢT RANDOM & SỐ ACC CÒN LẠI -->
+<div class="stats-container">
+  <div>
+    🎯 Đã random: <span id="count">0</span> lần
+  </div>
+  <div>
+    📦 Còn lại: <span id="remaining">0</span> acc
+  </div>
+</div>
 
 <!-- KHU VỰC LIÊN HỆ -->
 <div class="contact-section">
@@ -278,7 +305,8 @@ lần
 
 <script>
 
-const accounts = [
+// Danh sách acc ban đầu
+let accounts = [
   {user:"lolilord0906", pass:"huq098765432"},
   {user:"viplstar", pass:"bao29081997"},
   {user:"saahawat", pass:"sstamp0814864059"},
@@ -383,27 +411,50 @@ const accounts = [
 
 let currentAcc = "";
 let count = Number(localStorage.getItem("count")) || 0;
+
+// Cập nhật giao diện ban đầu
 document.getElementById("count").innerHTML = count;
+document.getElementById("remaining").innerHTML = accounts.length;
 
 function randomAcc(){
-  // Thuật toán lấy ngẫu nhiên tài khoản
-  let randomIndex = Math.floor(Math.random() * accounts.length);
-  let acc = accounts[randomIndex];
+  // Kiểm tra nếu hết tài khoản
+  if (accounts.length === 0) {
+    alert("⚠️ Đã hết tài khoản trong hệ thống!");
+    let btn = document.getElementById("randomBtn");
+    btn.disabled = true;
+    btn.innerText = "❌ ĐÃ HẾT ACC";
+    return;
+  }
 
+  // 1. Lấy ngẫu nhiên vị trí trong mảng
+  let randomIndex = Math.floor(Math.random() * accounts.length);
+  
+  // 2. Rút tài khoản ra khỏi danh sách (xoá khỏi mảng để không trùng lặp nữa)
+  let acc = accounts.splice(randomIndex, 1)[0];
+
+  // 3. Hiển thị thông tin acc
   document.getElementById("user").innerHTML = "👤 Tài khoản: " + acc.user;
   document.getElementById("pass").innerHTML = "🔑 Mật khẩu: " + (acc.pass ? acc.pass : "(Không có mật khẩu)");
-
   document.getElementById("result").style.display = "block";
 
   currentAcc = "Tài khoản: " + acc.user + "\nMật khẩu: " + acc.pass;
 
-  // Tăng số lượt đã random
+  // 4. Cập nhật lượt random và số acc còn lại
   count++;
   localStorage.setItem("count", count);
   document.getElementById("count").innerHTML = count;
+  document.getElementById("remaining").innerHTML = accounts.length;
+
+  // 5. Nếu vừa lấy acc cuối cùng, đổi trạng thái nút bấm
+  if (accounts.length === 0) {
+    let btn = document.getElementById("randomBtn");
+    btn.disabled = true;
+    btn.innerText = "❌ ĐÃ HẾT ACC";
+  }
 }
 
 function copyAcc(){
+  if (!currentAcc) return;
   navigator.clipboard.writeText(currentAcc);
   alert("✅ Đã copy acc");
 }
