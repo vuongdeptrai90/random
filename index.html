@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Vương Hóng Hớt - Random Acc Liên Quân</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    background:linear-gradient(135deg,#080808,#202020);
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.container{
+    width:95%;
+    max-width:450px;
+    background:#151515;
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0 0 30px #000;
+    text-align:center;
+}
+
+.logo{
+    font-size:35px;
+}
+
+h1{
+    color:#00eaff;
+    margin:10px 0;
+}
+
+.desc{
+    color:#aaa;
+}
+
+select,button{
+    width:100%;
+    padding:14px;
+    margin-top:12px;
+    border-radius:12px;
+    border:none;
+    font-size:16px;
+}
+
+select{
+    background:#252525;
+    color:white;
+}
+
+button{
+    background:#00eaff;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+button:hover{
+    opacity:.8;
+}
+
+.result{
+    display:none;
+    margin-top:20px;
+    background:#222;
+    padding:20px;
+    border-radius:15px;
+    text-align:left;
+}
+
+.info{
+    margin:8px 0;
+}
+
+.vip{
+    color:#ffd700;
+}
+
+.copy{
+    background:#00ff88;
+}
+
+.history{
+    margin-top:20px;
+    font-size:14px;
+    color:#aaa;
+}
+</style>
+
+</head>
+
+<body>
+
+
+<div class="container">
+
+<div class="logo">🎁</div>
+
+<h1>Vương Hóng Hớt</h1>
+
+<p class="desc">
+Random Acc Liên Quân miễn phí
+</p>
+
+
+<select id="type">
+
+<option value="all">
+Tất cả Acc
+</option>
+
+<option value="vip">
+Acc VIP
+</option>
+
+<option value="normal">
+Acc thường
+</option>
+
+</select>
+
+
+<button onclick="randomAcc()">
+🎲 RANDOM ACC
+</button>
+
+
+<div class="result" id="result">
+
+<div class="info" id="username"></div>
+
+<div class="info" id="password"></div>
+
+<div class="info" id="rank"></div>
+
+<div class="info" id="skin"></div>
+
+
+<button class="copy" onclick="copyAcc()">
+📋 Copy Acc
+</button>
+
+</div>
+
+
+<div class="history">
+Đã random: <span id="count">0</span> lần
+</div>
+
+
+</div>
+
+
+
+<script>
+
+
+const accounts=[
+
+{
+user:"lienquan_vip01",
+pass:"123456",
+rank:"Chiến Tướng",
+skin:"200+ Skin",
+type:"vip"
+},
+
+{
+user:"lienquan_vip02",
+pass:"abcdef",
+rank:"Cao Thủ",
+skin:"150+ Skin",
+type:"vip"
+},
+
+{
+user:"free_lq001",
+pass:"111111",
+rank:"Kim Cương",
+skin:"50 Skin",
+type:"normal"
+},
+
+{
+user:"free_lq002",
+pass:"222222",
+rank:"Bạch Kim",
+skin:"30 Skin",
+type:"normal"
+}
+
+];
+
+
+let last=-1;
+let current="";
+
+let count=
+Number(localStorage.getItem("randomCount")) || 0;
+
+document.getElementById("count").innerHTML=count;
+
+
+
+function randomAcc(){
+
+
+let type=document.getElementById("type").value;
+
+
+let list=accounts.filter(a=>
+type=="all" || a.type==type
+);
+
+
+if(list.length==0){
+alert("Không có acc loại này!");
+return;
+}
+
+
+let index;
+
+do{
+
+index=Math.floor(Math.random()*list.length);
+
+}
+while(index==last && list.length>1);
+
+
+last=index;
+
+
+let acc=list[index];
+
+
+document.getElementById("username").innerHTML=
+"👤 Tài khoản: "+acc.user;
+
+
+document.getElementById("password").innerHTML=
+"🔑 Mật khẩu: "+acc.pass;
+
+
+document.getElementById("rank").innerHTML=
+"🏆 Rank: "+acc.rank;
+
+
+document.getElementById("skin").innerHTML=
+"🎭 Skin: "+acc.skin;
+
+
+document.getElementById("result").style.display="block";
+
+
+current=
+"Tài khoản: "+acc.user+
+"\nMật khẩu: "+acc.pass+
+"\nRank: "+acc.rank+
+"\nSkin: "+acc.skin;
+
+
+
+count++;
+
+localStorage.setItem("randomCount",count);
+
+document.getElementById("count").innerHTML=count;
+
+
+}
+
+
+
+function copyAcc(){
+
+navigator.clipboard.writeText(current);
+
+alert("✅ Đã copy thông tin acc!");
+
+}
+
+
+</script>
+
+
+</body>
+</html>
