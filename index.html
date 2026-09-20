@@ -9,7 +9,6 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
-
 <style>
 
 *{
@@ -17,367 +16,149 @@ box-sizing:border-box;
 font-family:'Poppins',sans-serif;
 }
 
-
 body{
-
 margin:0;
 min-height:100vh;
-
 display:flex;
 justify-content:center;
 align-items:center;
-
 overflow-x:hidden;
-
 color:white;
-
 background:
 radial-gradient(circle at top,#00eaff55,transparent 40%),
 linear-gradient(135deg,#030303,#151515,#222);
-
 padding:20px 0;
-
 }
-
 
 /* nền chuyển động */
-
 body:before{
-
 content:"";
-
 position:absolute;
-
 width:500px;
 height:500px;
-
 background:#00eaff;
-
 filter:blur(180px);
-
 opacity:.3;
-
 animation:bgmove 8s infinite alternate;
-
 }
 
-
-
 @keyframes bgmove{
-
 from{
 transform:translate(-200px,-100px);
 }
-
 to{
 transform:translate(200px,100px);
 }
-
 }
-
-
 
 .box{
-
-
 width:95%;
-
 max-width:430px;
-
 padding:30px;
-
-
-background:
-
-rgba(255,255,255,.08);
-
-
+background:rgba(255,255,255,.08);
 backdrop-filter:blur(15px);
-
-
 border-radius:25px;
-
-
 border:1px solid rgba(255,255,255,.2);
-
-
-box-shadow:
-
-0 0 40px #00eaff55;
-
-
+box-shadow:0 0 40px #00eaff55;
 text-align:center;
-
-
 animation:show .7s;
-
 position:relative;
 z-index:1;
-
-
 }
-
-
 
 @keyframes show{
-
 from{
-
 opacity:0;
-
 transform:translateY(50px);
-
 }
-
 to{
-
 opacity:1;
-
 transform:none;
-
 }
-
 }
-
-
 
 .logo{
-
 font-size:65px;
-
 animation:float 2s infinite;
-
 }
-
 
 @keyframes float{
-
 50%{
-
 transform:translateY(-10px);
-
 }
-
 }
-
-
 
 h1{
-
 margin:5px;
-
 font-size:30px;
-
 color:#00eaff;
-
-
-text-shadow:
-
-0 0 20px #00eaff;
-
+text-shadow:0 0 20px #00eaff;
 }
-
-
 
 p{
-
 color:#ddd;
-
 }
 
-
-
-select,
 button{
-
-
 width:100%;
-
 padding:15px;
-
 margin-top:15px;
-
-
 border:none;
-
 border-radius:15px;
-
-
 font-size:16px;
-
-}
-
-
-
-select{
-
-
-background:#111;
-
-color:white;
-
-border:1px solid #00eaff;
-
-
-}
-
-
-
-button{
-
-
-background:
-
-linear-gradient(45deg,#00eaff,#008cff);
-
-
+background:linear-gradient(45deg,#00eaff,#008cff);
 font-weight:bold;
-
 cursor:pointer;
-
-
-box-shadow:
-
-0 0 20px #00eaff;
-
-
+box-shadow:0 0 20px #00eaff;
 transition:.3s;
-
-
 }
-
-
 
 button:hover{
-
 transform:scale(1.05);
-
 }
-
-
 
 button:active{
-
 transform:scale(.95);
-
 }
-
-
-
-button:disabled{
-
-
-background:#555;
-
-box-shadow:none;
-
-}
-
-
 
 .result{
-
-
 display:none;
-
 margin-top:20px;
-
 padding:20px;
-
-
 border-radius:20px;
-
-
-background:
-
-rgba(0,0,0,.45);
-
-
+background:rgba(0,0,0,.45);
 border:1px solid #00eaff;
-
-
 animation:popup .5s;
-
 }
-
-
 
 @keyframes popup{
-
-
 from{
-
 opacity:0;
-
 transform:scale(.7);
-
 }
-
-
 to{
-
 opacity:1;
-
 transform:scale(1);
-
 }
-
 }
-
-
 
 .result p{
-
-
 background:#111;
-
 padding:10px;
-
 border-radius:10px;
-
-
 color:white;
-
-
+word-break: break-all;
 }
-
-
 
 .copy{
-
-
-background:
-
-linear-gradient(45deg,#00ff88,#00cc55);
-
-
-box-shadow:
-
-0 0 20px #00ff88;
-
-
+background:linear-gradient(45deg,#00ff88,#00cc55);
+box-shadow:0 0 20px #00ff88;
 }
-
-
-
-#cooldown{
-
-color:#ffd700;
-
-font-weight:bold;
-
-}
-
-
 
 #count{
-
 color:#00ff88;
-
 font-size:22px;
-
 font-weight:bold;
-
 }
 
 /* KHU VỰC THÔNG TIN LIÊN HỆ */
@@ -439,400 +220,195 @@ font-weight:bold;
   border-color: #00eaff;
 }
 
-
 </style>
 
 </head>
 
-
-
 <body>
 
-
 <div class="box">
-
 
 <div class="logo">
 🎁
 </div>
 
-
 <h1>
 Vương Hóng Hớt
 </h1>
-
 
 <p>
 🔥 Random Acc Liên Quân Miễn Phí 🔥
 </p>
 
-
-
-<select id="type">
-
-<option value="all">
-🎲 Tất cả acc
-</option>
-
-<option value="vip">
-⭐ Acc VIP
-</option>
-
-<option value="normal">
-🆓 Acc thường
-</option>
-
-</select>
-
-
-
 <button id="randomBtn" onclick="randomAcc()">
-
 🎁 RANDOM ACC NGAY
-
 </button>
-
-
-<p id="cooldown"></p>
-
-
 
 <div class="result" id="result">
 
-
 <p id="user"></p>
-
 <p id="pass"></p>
 
-<p id="rank"></p>
-
-<p id="skin"></p>
-
-
-
 <button class="copy" onclick="copyAcc()">
-
 📋 COPY ACC
-
 </button>
-
-
 
 </div>
 
-
-
 <p>
-
 🎯 Đã random:
-
-<span id="count">
-0
-</span>
-
+<span id="count">0</span>
 lần
-
 </p>
 
-
-<!-- BỔ SUNG KHU VỰC LIÊN HỆ -->
+<!-- KHU VỰC LIÊN HỆ -->
 <div class="contact-section">
   <div class="contact-title">📌 Kênh Liên Hệ & Hỗ Trợ</div>
   <div class="social-links">
-    
     <a href="https://youtube.com/@vuonghothot?si=X_A8s2qco4FYY1TW" target="_blank" class="social-btn youtube">
       ▶️ Đăng Ký YouTube Vương Hóng Hớt
     </a>
-
     <a href="mailto:nguyenquocvuong02004@gmail.com" class="social-btn gmail">
       ✉️ Gmail: nguyenquocvuong02004@gmail.com
     </a>
-
   </div>
 </div>
 
-
 </div>
-
-
 
 <script>
 
-
-const accounts=[
-
-
-{
-user:"banamaka",
-pass:"hoilamgi12",
-rank:"Chiến Tướng",
-skin:"200+ Skin",
-type:"vip"
-},
-
-
-{
-user:"nghiempro123z",
-pass:"0813751686a",
-rank:"Cao Thủ",
-skin:"150+ Skin",
-type:"vip"
-},
-
-
-{
-user:"reaogamer",
-pass:"rizqidn",
-rank:"Kim Cương",
-skin:"50 Skin",
-type:"normal"
-},
-
-
-{
-user:"phieulv5555",
-pass:"khang110",
-rank:"Bạch Kim",
-skin:"30 Skin",
-type:"normal"
-}
-
-
+const accounts = [
+  {user:"lolilord0906", pass:"huq098765432"},
+  {user:"viplstar", pass:"bao29081997"},
+  {user:"saahawat", pass:"sstamp0814864059"},
+  {user:"Frost1040", pass:"mellamofran00"},
+  {user:"mohcine00AM", pass:""},
+  {user:"huyth2414", pass:"huytk1009"},
+  {user:"dipu01855@gmail.com", pass:"Dipu2200@Mamun"},
+  {user:"bin43452", pass:"bin123456"},
+  {user:"oliVer", pass:"kd@d-$sk"},
+  {user:"GiangDapTroai10", pass:"giangpro48"},
+  {user:"Best.0011", pass:"027287787qw"},
+  {user:"17chicuong", pass:"concainit17"},
+  {user:"thuin1028", pass:"214867thuin"},
+  {user:"yuyuxd2533", pass:"0982634755n"},
+  {user:"crushlol09", pass:"Hoangduong2111."},
+  {user:"joshuatree199", pass:"papapogi193"},
+  {user:"zenogodd", pass:"godzen555"},
+  {user:"cdht789", pass:"su123456"},
+  {user:"haoCnnnn", pass:"2008753baybe"},
+  {user:"a1187963759", pass:"sgrufb@gmail.com"},
+  {user:"ashi0147", pass:"z12345678"},
+  {user:"bemy152127", pass:"Duy152127"},
+  {user:"haha2k11@gmail.com", pass:"vinh0211"},
+  {user:"some5555555", pass:"a0898185013"},
+  {user:"KHANGCHIDO2007", pass:"07052007KHANG@"},
+  {user:"thitat101", pass:"thitat1234"},
+  {user:"A6F_noname", pass:"218ThangGaMoney"},
+  {user:"rrtydgfhskeoiin", pass:"123456789a"},
+  {user:"themazingspider", pass:"1tuanco7ngay"},
+  {user:"pamezoro", pass:"ap0000000"},
+  {user:"danhgathoio", pass:"T8885684"},
+  {user:"vonvallero@gmail.com", pass:"voncha05517717"},
+  {user:"maybkung113", pass:"Mayb7158"},
+  {user:"...", pass:"nn083780"},
+  {user:"nguyentuanlx88", pass:"coldgirl8888"},
+  {user:"leemc2nd", pass:"lee240197"},
+  {user:"50360sd", pass:"Somchai097"},
+  {user:"nekostoreee", pass:"Bonheur10@"},
+  {user:"viewact", pass:"view11959"},
+  {user:"hathaivu156", pass:"Tungpro2K4@"},
+  {user:"black_spyder49", pass:"ashley16494117"},
+  {user:"Thoecute09", pass:"_Q"},
+  {user:"TeCNiCaa", pass:"Aef30082534"},
+  {user:"bronc1983@yahoo.com.tw", pass:"bronc1983"},
+  {user:"HDWY43", pass:"fifa23AE@@00"},
+  {user:"va061205", pass:"vietanh06122005"},
+  {user:"kaiozx2k2", pass:"thomlung.123"},
+  {user:"asdfghjio8", pass:"duykhoa123"},
+  {user:"kurtbarril2", pass:"kurtbarril18"},
+  {user:"Kongkang2547", pass:"280448boat"},
+  {user:"yuongcandy", pass:"ruacon00"},
+  {user:"samtech2556", pass:"zaqxswcde121"},
+  {user:"Gashinbut", pass:"quanisreal123"},
+  {user:"dmm1shot", pass:"chinhkk0xzx"},
+  {user:"WtoGamerxd", pass:"Som02022562!"},
+  {user:"khoitn2315", pass:"Khoi@32@21@13"},
+  {user:"topnoodplay1991", pass:"khanhhuy2010$"},
+  {user:"sagor.22", pass:"@hasanbabu3255@"},
+  {user:"khocthetviai", pass:"ohuiagescienc3"},
+  {user:"qsc13463572579", pass:"asd13463572579"},
+  {user:"rhinolai5498", pass:"sogbowie5498"},
+  {user:"InfiniteOF", pass:"MECHANICAL2829"},
+  {user:"wwwsd74123", pass:"123123zx"},
+  {user:"scoreu", pass:"otTr1111"},
+  {user:"hustla_lee", pass:"hustla338"},
+  {user:"sERTxb-sadS", pass:"fDGxcERT-987dC"},
+  {user:"x848mn", pass:"boyboy00"},
+  {user:"Khoa23451345", pass:"201112345678z"},
+  {user:"tytyu6789", pass:"24052007@"},
+  {user:"men26621zx", pass:"1234567890zx"},
+  {user:"vanpham2k1", pass:"vanpham2001"},
+  {user:"nhtrung1007", pass:"trung02001007"},
+  {user:"gfame88", pass:"fernadel8834"},
+  {user:"kakak345011", pass:"kakak345011"},
+  {user:"zatanopro212", pass:"z1234567890z"},
+  {user:"bookmilk9", pass:"912346zaza"},
+  {user:"chaosbr0nger", pass:"Virtual0400"},
+  {user:"Jaki0205", pass:"Tungame123"},
+  {user:"DKTVN03", pass:"DacDung0302"},
+  {user:"tu210920032003", pass:"tu2192003"},
+  {user:"ChÐ–ÐŽi game", pass:"Hoai12345bt"},
+  {user:"kfir12321", pass:"477087asd"},
+  {user:"bongbedep", pass:"mixigam12"},
+  {user:"Mailephuc456", pass:"Mailephuc000"},
+  {user:"morenosaja46@gmail.com", pass:"hesoyam123"},
+  {user:"gdgdgdgsds@gmail.com", pass:"XEJCjrij6"},
+  {user:"yowaimo104", pass:"IamGOJO204!"},
+  {user:"lienquanfeed", pass:"Trungdang1"},
+  {user:"huyduong12968@gmail.com", pass:"kISSMYASS1"},
+  {user:"jr201jlo", pass:"pan54321pet"},
+  {user:"0984877175", pass:"Nam-992549"},
+  {user:"qq52tatxy", pass:"0902140980Za!"},
+  {user:"trunguykg5", pass:"aB921401"},
+  {user:"gromm8229ash", pass:"gOzqdtLl"},
+  {user:"nhanphamvua", pass:"hidro153"},
+  {user:"boikate2", pass:"0755504860Abc"},
+  {user:"ron8008", pass:"00543200887zz"},
+  {user:"zakyt2626", pass:"T.Bin121"},
+  {user:"bixl200", pass:"phatsad12345"},
+  {user:"ivoarmondes", pass:"012abc!@#"}
 ];
 
-
-
-let currentAcc="";
-
-
-let count=
-Number(localStorage.getItem("count"))||0;
-
-
-document.getElementById("count").innerHTML=count;
-
-
-
-const wait=
-24*60*60*1000;
-
-
+let currentAcc = "";
+let count = Number(localStorage.getItem("count")) || 0;
+document.getElementById("count").innerHTML = count;
 
 function randomAcc(){
+  // Thuật toán lấy ngẫu nhiên tài khoản
+  let randomIndex = Math.floor(Math.random() * accounts.length);
+  let acc = accounts[randomIndex];
 
+  document.getElementById("user").innerHTML = "👤 Tài khoản: " + acc.user;
+  document.getElementById("pass").innerHTML = "🔑 Mật khẩu: " + (acc.pass ? acc.pass : "(Không có mật khẩu)");
 
+  document.getElementById("result").style.display = "block";
 
-let last=
-localStorage.getItem("randomTime");
+  currentAcc = "Tài khoản: " + acc.user + "\nMật khẩu: " + acc.pass;
 
-
-if(last && Date.now()-last < wait){
-
-
-alert("⏳ Bạn đã random hôm nay rồi!");
-
-
-startTimer();
-
-
-return;
-
-
+  // Tăng số lượt đã random
+  count++;
+  localStorage.setItem("count", count);
+  document.getElementById("count").innerHTML = count;
 }
-
-
-
-let type=
-document.getElementById("type").value;
-
-
-
-let list=
-accounts.filter(a=>
-
-type=="all" || a.type==type
-
-);
-
-
-
-let acc=
-list[Math.floor(Math.random()*list.length)];
-
-
-
-document.getElementById("user").innerHTML=
-"👤 Tài khoản: "+acc.user;
-
-
-document.getElementById("pass").innerHTML=
-"🔑 Mật khẩu: "+acc.pass;
-
-
-document.getElementById("rank").innerHTML=
-"🏆 Rank: "+acc.rank;
-
-
-document.getElementById("skin").innerHTML=
-"🎭 Skin: "+acc.skin;
-
-
-
-document.getElementById("result").style.display="block";
-
-
-
-currentAcc=
-
-"Tài khoản: "+acc.user+
-"\nMật khẩu: "+acc.pass+
-"\nRank: "+acc.rank+
-"\nSkin: "+acc.skin;
-
-
-
-localStorage.setItem(
-"randomTime",
-Date.now()
-);
-
-
-
-count++;
-
-
-localStorage.setItem(
-"count",
-count
-);
-
-
-
-document.getElementById("count").innerHTML=count;
-
-
-
-startTimer();
-
-
-
-}
-
-
-
 
 function copyAcc(){
-
-
-navigator.clipboard.writeText(currentAcc);
-
-
-alert("✅ Đã copy acc");
-
-
+  navigator.clipboard.writeText(currentAcc);
+  alert("✅ Đã copy acc");
 }
-
-
-
-
-function startTimer(){
-
-
-let timer=setInterval(()=>{
-
-
-let last=
-localStorage.getItem("randomTime");
-
-
-let remain=
-wait-(Date.now()-last);
-
-
-
-if(remain<=0){
-
-
-clearInterval(timer);
-
-
-document.getElementById("randomBtn").disabled=false;
-
-
-document.getElementById("randomBtn").innerHTML=
-"🎁 RANDOM ACC NGAY";
-
-
-document.getElementById("cooldown").innerHTML=
-"✅ Có thể random lại";
-
-
-return;
-
-}
-
-
-
-let h=
-Math.floor(remain/3600000);
-
-
-let m=
-Math.floor((remain%3600000)/60000);
-
-
-let s=
-Math.floor((remain%60000)/1000);
-
-
-
-document.getElementById("cooldown").innerHTML=
-
-"⏳ Còn lại: "
-+h+" giờ "
-+m+" phút "
-+s+" giây";
-
-
-
-document.getElementById("randomBtn").disabled=true;
-
-
-document.getElementById("randomBtn").innerHTML=
-"⏳ ĐANG CHỜ";
-
-
-},1000);
-
-
-}
-
-
-
-
-function check(){
-
-
-let last=
-localStorage.getItem("randomTime");
-
-
-if(last && Date.now()-last < wait){
-
-startTimer();
-
-}
-
-
-}
-
-
-check();
-
-
 
 </script>
-
 
 </body>
 </html>
