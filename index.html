@@ -77,9 +77,14 @@ transform:none;
 }
 }
 
-.logo{
-font-size:65px;
-animation:float 2s infinite;
+.logo-img {
+width: 100px;
+height: 100px;
+border-radius: 50%;
+object-fit: cover;
+border: 3px solid #00eaff;
+box-shadow: 0 0 20px #00eaff;
+animation: float 2s infinite;
 }
 
 @keyframes float{
@@ -89,7 +94,7 @@ transform:translateY(-10px);
 }
 
 h1{
-margin:5px;
+margin:10px 0 5px 0;
 font-size:30px;
 color:#00eaff;
 text-shadow:0 0 20px #00eaff;
@@ -202,9 +207,43 @@ color: #fff;
 transform: none;
 }
 
+/* KHU VỰC DONATE QR */
+.donate-section {
+  margin-top: 25px;
+  padding: 15px;
+  background: rgba(0, 234, 255, 0.05);
+  border-radius: 18px;
+  border: 1px solid rgba(0, 234, 255, 0.2);
+}
+
+.donate-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #00ff88;
+  margin-bottom: 8px;
+}
+
+.donate-desc {
+  font-size: 12px;
+  color: #ccc;
+  margin-bottom: 12px;
+}
+
+.qr-img {
+  width: 180px;
+  border-radius: 15px;
+  border: 2px solid #00eaff;
+  box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
+  transition: transform 0.3s;
+}
+
+.qr-img:hover {
+  transform: scale(1.05);
+}
+
 /* KHU VỰC THÔNG TIN LIÊN HỆ */
 .contact-section {
-  margin-top: 25px;
+  margin-top: 20px;
   padding-top: 15px;
   border-top: 1px dashed rgba(255, 255, 255, 0.2);
 }
@@ -269,8 +308,9 @@ transform: none;
 
 <div class="box">
 
+<!-- LOGO ĐẠI DIỆN CHÍNH CHỦ -->
 <div class="logo">
-🎁
+  <img src="1dfcfc6fa521829f0446a598ec0b254b.jpg" alt="Vương Hóng Hớt Logo" class="logo-img">
 </div>
 
 <h1>
@@ -307,6 +347,13 @@ Vương Hóng Hớt
 </div>
 
 <button class="reset-btn" onclick="resetData()">🔄 Nạp lại kho 100 acc ban đầu</button>
+
+<!-- KHU VỰC DONATE ZALOPAY -->
+<div class="donate-section">
+  <div class="donate-title">💖 Ủng Hộ / Donate Cho Kênh</div>
+  <div class="donate-desc">Quét mã QR để ủng hộ admin có kinh phí nhập thêm acc nhé!</div>
+  <img src="zlp-1788020538540.jpg" alt="Mã QR Donate ZaloPay" class="qr-img">
+</div>
 
 <!-- KHU VỰC LIÊN HỆ -->
 <div class="contact-section">
