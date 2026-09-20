@@ -9,7 +9,19 @@ local p = Players.LocalPlayer
 ----------------------------------------------------------------
 -- CẤU HÌNH GIAO DIỆN
 ----------------------------------------------------------------
+-- true = bật hiệu ứng viền chạy màu + logo nhấp nháy (đẹp hơn nhưng tốn máy)
+local ANIMATIONS = false
+
 local LOGO_ID = ""  -- ID ảnh mèo chuối (Decal). Để trống thì dùng emoji 🍌
+
+-- Thông tin của bạn: sửa lại cho đúng, muốn thêm mạng xã hội thì thêm 1 dòng
+local INFO = {
+	Author = "Vương Hóng Hớt",
+	Version = "v1.0",
+	Socials = {
+		{ Icon = "▶", Name = "YouTube", Link = "https://youtube.com/@vuongrobloxez?si=bJT3pi3V2K9jN-Jt" },
+	},
+}
 
 local THEME = {
 	Panel   = Color3.fromRGB(19, 21, 30),
@@ -24,7 +36,8 @@ local THEME = {
 	Danger  = Color3.fromRGB(230, 60, 75),
 }
 
-local W, H_FULL, H_MIN = 300, 308, 46
+local W, H_FULL, H_MIN, H_INFO = 252, 136, 36, 270
+local currentH = H_FULL
 
 local function make(class, props, parent)
 	local o = Instance.new(class)
@@ -48,22 +61,24 @@ local gui = make("ScreenGui", {
 
 local open = make("ImageButton", {
 	Name = "Logo",
-	Size = UDim2.fromOffset(64, 64),
-	Position = UDim2.new(0, 20, 0.5, -32),
+	Size = UDim2.fromOffset(52, 52),
+	Position = UDim2.new(0, 16, 0.5, -26),
 	BackgroundColor3 = Color3.fromRGB(255, 221, 51),
 	BackgroundTransparency = LOGO_ID ~= "" and 1 or 0,
 	Image = LOGO_ID ~= "" and ("rbxassetid://" .. LOGO_ID) or "",
 	ScaleType = Enum.ScaleType.Fit,
 	Draggable = true,
 }, gui)
-corner(open, 32)
+corner(open, 26)
 
 local logoStroke = make("UIStroke", { Color = THEME.Accent, Thickness = 2.5 }, open)
-TweenService:Create(
-	logoStroke,
-	TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
-	{ Thickness = 4.5, Transparency = 0.45 }
-):Play()
+if ANIMATIONS then
+	TweenService:Create(
+		logoStroke,
+		TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+		{ Thickness = 4.5, Transparency = 0.45 }
+	):Play()
+end
 
 if LOGO_ID == "" then
 	make("TextLabel", {
@@ -77,25 +92,36 @@ end
 ----------------------------------------------------------------
 -- ESP NPC
 ----------------------------------------------------------------
-local ESP = { Enabled = false, Tracked = {}, Conns = {} }
+local ESP = { NPC = false, Player = false, Tracked = {}, Conns = {}, Gen = 0 }
 
 local ESP_CONFIG = {
-	Color = Color3.fromRGB(0, 255, 100),
+	NPCColor = Color3.fromRGB(0, 255, 100),
+	PlayerColor = Color3.fromRGB(0, 170, 255),
 	LowHealthColor = Color3.fromRGB(255, 60, 60),
 	FillTransparency = 0.5,
-	MaxDistance = 500,
-	UpdateRate = 0.1,
+	MaxDistance = 600,   -- xa hơn thì ẩn
+	MaxTargets = 20,     -- chỉ vẽ tối đa N mục tiêu gần nhất (giảm lag GPU)
+	UpdateRate = 0.15,   -- giây giữa mỗi lần cập nhật
 }
 
 local espFolder = make("Folder", { Name = "ESPFolder" }, gui)
 
-local function isNPC(model)
-	return model:IsA("Model")
-		and model:FindFirstChildOfClass("Humanoid") ~= nil
-		and Players:GetPlayerFromCharacter(model) == nil
+-- phân loại: nhân vật người chơi khác = "Player", model có Humanoid còn lại = "NPC"
+local function getKind(model)
+	if not model:IsA("Model") or model == p.Character then return nil end
+	if not model:FindFirstChildOfClass("Humanoid") then return nil end
+	local kind = Players:GetPlayerFromCharacter(model) and "Player" or "NPC"
+	return ESP[kind] and kind or nil
 end
 
-local function removeNPC(model)
+local function mainPart(model)
+	return model:FindFirstChild("HumanoidRootPart")
+		or model.PrimaryPart
+		or model:FindFirstChild("Head")
+		or model:FindFirstChildWhichIsA("BasePart", true)
+end
+
+local function removeTarget(model)
 	local data = ESP.Tracked[model]
 	if not data then return end
 	data.Highlight:Destroy()
@@ -103,23 +129,25 @@ local function removeNPC(model)
 	ESP.Tracked[model] = nil
 end
 
-local function addNPC(model)
-	if ESP.Tracked[model] or not isNPC(model) then return end
-	local adornee = model:FindFirstChild("Head")
-		or model:FindFirstChild("HumanoidRootPart")
-		or model.PrimaryPart
-	if not adornee then return end
+local function addTarget(model)
+	if ESP.Tracked[model] then return end
+	local kind = getKind(model)
+	if not kind then return end
+	local part = mainPart(model)
+	if not part then return end
+
+	local color = kind == "Player" and ESP_CONFIG.PlayerColor or ESP_CONFIG.NPCColor
 
 	local h = make("Highlight", {
 		Adornee = model,
 		DepthMode = Enum.HighlightDepthMode.AlwaysOnTop,
-		FillColor = ESP_CONFIG.Color,
+		FillColor = color,
 		OutlineColor = Color3.new(1, 1, 1),
 		FillTransparency = ESP_CONFIG.FillTransparency,
-	}, espFolder)
+	}, model)
 
 	local bb = make("BillboardGui", {
-		Adornee = adornee,
+		Adornee = model:FindFirstChild("Head") or part,
 		AlwaysOnTop = true,
 		Size = UDim2.fromOffset(140, 30),
 		StudsOffset = Vector3.new(0, 2.5, 0),
@@ -134,33 +162,60 @@ local function addNPC(model)
 		TextStrokeTransparency = 0.3,
 	}, bb)
 
-	ESP.Tracked[model] = { Highlight = h, Gui = bb, Label = lbl }
+	ESP.Tracked[model] = {
+		Highlight = h, Gui = bb, Label = lbl,
+		Hum = model:FindFirstChildOfClass("Humanoid"),
+		Root = part, Kind = kind, Color = color, Name = model.Name,
+		Shown = true, Dist = 0,
+	}
 end
 
 local function clearAll()
-	for model in pairs(ESP.Tracked) do removeNPC(model) end
+	for model in pairs(ESP.Tracked) do removeTarget(model) end
 	for _, c in ipairs(ESP.Conns) do c:Disconnect() end
 	table.clear(ESP.Conns)
 end
 
-local function enableESP()
-	for _, v in ipairs(workspace:GetDescendants()) do
-		if v:IsA("Humanoid") and v.Parent then addNPC(v.Parent) end
+-- chỉ đổi thuộc tính khi thật sự thay đổi (đỡ tốn render)
+local function setShown(data, on)
+	if data.Shown ~= on then
+		data.Shown = on
+		data.Highlight.Enabled = on
+		data.Gui.Enabled = on
 	end
+end
 
-	table.insert(ESP.Conns, workspace.DescendantAdded:Connect(function(v)
-		if v:IsA("Humanoid") then
-			task.defer(function()
-				if v.Parent then addNPC(v.Parent) end
-			end)
+local function startESP()
+	local gen = ESP.Gen
+
+	-- quét nền, chia nhỏ từng đợt để không bị đứng hình
+	task.spawn(function()
+		local n = 0
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if ESP.Gen ~= gen then return end
+			if v.ClassName == "Humanoid" and v.Parent then addTarget(v.Parent) end
+			n += 1
+			if n % 2000 == 0 then task.wait() end
 		end
+	end)
+
+	-- mục tiêu mới (respawn / spawn thêm)
+	table.insert(ESP.Conns, workspace.DescendantAdded:Connect(function(v)
+		if v.ClassName ~= "Humanoid" then return end
+		task.spawn(function()
+			local m = v.Parent
+			if not m then return end
+			m:WaitForChild("Head", 3)  -- chờ model load đủ bộ phận
+			if ESP.Gen == gen then addTarget(m) end
+		end)
 	end))
 
 	table.insert(ESP.Conns, workspace.DescendantRemoving:Connect(function(v)
-		if ESP.Tracked[v] then removeNPC(v) end
+		if ESP.Tracked[v] then removeTarget(v) end
 	end))
 
 	local acc = 0
+	local list = {}
 	table.insert(ESP.Conns, RunService.Heartbeat:Connect(function(dt)
 		acc += dt
 		if acc < ESP_CONFIG.UpdateRate then return end
@@ -168,34 +223,65 @@ local function enableESP()
 
 		local myRoot = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
 		local origin = myRoot and myRoot.Position or Camera.CFrame.Position
+		local maxDist = ESP_CONFIG.MaxDistance
+		table.clear(list)
 
 		for model, data in pairs(ESP.Tracked) do
-			local hum = model:FindFirstChildOfClass("Humanoid")
-			local root = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart
-
-			if not model:IsDescendantOf(workspace) or not hum then
-				removeNPC(model)
+			local hum = data.Hum
+			if not model.Parent or not hum or not hum.Parent then
+				removeTarget(model)
 			else
-				local dist = root and (root.Position - origin).Magnitude or math.huge
-				local visible = hum.Health > 0 and dist <= ESP_CONFIG.MaxDistance
+				local root = data.Root
+				if not root or not root.Parent then
+					root = mainPart(model)
+					data.Root = root
+				end
+				local dist = root and (root.Position - origin).Magnitude or 0
+				if hum.Health > 0 and dist <= maxDist then
+					data.Dist = dist
+					list[#list + 1] = data
+				else
+					setShown(data, false)
+				end
+			end
+		end
 
-				data.Highlight.Enabled = visible
-				data.Gui.Enabled = visible
+		-- chỉ vẽ N mục tiêu gần nhất
+		if #list > ESP_CONFIG.MaxTargets then
+			table.sort(list, function(a, b) return a.Dist < b.Dist end)
+		end
 
-				if visible then
+		for i, data in ipairs(list) do
+			if i > ESP_CONFIG.MaxTargets then
+				setShown(data, false)
+			else
+				setShown(data, true)
+				local hum = data.Hum
+				local hp = math.floor(hum.Health)
+				local d = math.floor(data.Dist / 5 + 0.5) * 5  -- làm tròn 5m cho đỡ đổi chữ liên tục
+				if data.HP ~= hp or data.D ~= d then
+					data.HP, data.D = hp, d
+					data.Label.Text = string.format("%s | %d HP | %dm", data.Name, hp, d)
 					local ratio = math.clamp(hum.Health / math.max(hum.MaxHealth, 1), 0, 1)
-					data.Highlight.FillColor = ESP_CONFIG.LowHealthColor:Lerp(ESP_CONFIG.Color, ratio)
-					data.Label.Text = string.format("%s | %d HP | %dm",
-						model.Name, math.floor(hum.Health), math.floor(dist))
+					data.Highlight.FillColor = ESP_CONFIG.LowHealthColor:Lerp(data.Color, ratio)
 				end
 			end
 		end
 	end))
 end
 
-function ESP.Toggle(state)
-	ESP.Enabled = state
-	if state then enableESP() else clearAll() end
+function ESP.Refresh()
+	ESP.Gen += 1  -- huỷ đợt quét cũ đang chạy nền
+	clearAll()
+	if ESP.NPC or ESP.Player then startESP() end
+end
+
+function ESP.CountKind(kind)
+	local n = 0
+	for _, d in pairs(ESP.Tracked) do
+		if d.Kind == kind then n += 1 end
+	end
+	return n
 end
 
 ----------------------------------------------------------------
@@ -204,7 +290,8 @@ end
 local hub = make("Frame", {
 	Name = "Hub",
 	Size = UDim2.fromOffset(W, H_FULL),
-	Position = UDim2.new(0.5, -W / 2, 0.5, -H_FULL / 2),
+	AnchorPoint = Vector2.new(0.5, 0),
+	Position = UDim2.new(0.5, 0, 0.5, -H_FULL / 2),
 	BackgroundColor3 = Color3.new(1, 1, 1),
 	Visible = false,
 	Active = true,
@@ -233,11 +320,16 @@ local hubGrad = make("UIGradient", {
 	}),
 }, hubStroke)
 
-RunService.Heartbeat:Connect(function(dt)
-	if hub.Visible then
-		hubGrad.Rotation = (hubGrad.Rotation + dt * 90) % 360
-	end
-end)
+if ANIMATIONS then
+	local accG = 0
+	RunService.Heartbeat:Connect(function(dt)
+		if not hub.Visible then accG = 0 return end
+		accG += dt
+		if accG < 1 / 20 then return end  -- 20 lần/giây là đủ mượt
+		hubGrad.Rotation = (hubGrad.Rotation + accG * 90) % 360
+		accG = 0
+	end)
+end
 
 -- header
 local header = make("Frame", {
@@ -252,11 +344,11 @@ make("UIGradient", {
 
 local title = make("TextLabel", {
 	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(14, 5),
-	Size = UDim2.new(1, -110, 0, 22),
+	Position = UDim2.fromOffset(10, 3),
+	Size = UDim2.new(1, -100, 0, 18),
 	Text = "☠ VƯƠNG HÓNG HỚT",
 	Font = Enum.Font.GothamBlack,
-	TextSize = 15,
+	TextSize = 13,
 	TextColor3 = Color3.new(1, 1, 1),
 	TextXAlignment = Enum.TextXAlignment.Left,
 }, header)
@@ -264,11 +356,11 @@ make("UIGradient", { Color = ColorSequence.new(THEME.Accent, THEME.Accent2) }, t
 
 make("TextLabel", {
 	BackgroundTransparency = 1,
-	Position = UDim2.fromOffset(14, 26),
-	Size = UDim2.new(1, -110, 0, 14),
+	Position = UDim2.fromOffset(10, 21),
+	Size = UDim2.new(1, -100, 0, 12),
 	Text = "HUB LITE  •  GAMING EDITION",
 	Font = Enum.Font.GothamMedium,
-	TextSize = 10,
+	TextSize = 9,
 	TextColor3 = THEME.Sub,
 	TextXAlignment = Enum.TextXAlignment.Left,
 }, header)
@@ -285,11 +377,11 @@ make("UIGradient", { Color = ColorSequence.new(THEME.Accent, THEME.Accent2) }, l
 
 local function headerBtn(text, xOff, color)
 	local b = make("TextButton", {
-		Size = UDim2.fromOffset(28, 28),
-		Position = UDim2.new(1, xOff, 0, 9),
+		Size = UDim2.fromOffset(24, 24),
+		Position = UDim2.new(1, xOff, 0, 6),
 		Text = text,
 		Font = Enum.Font.GothamBold,
-		TextSize = 14,
+		TextSize = 12,
 		TextColor3 = Color3.new(1, 1, 1),
 		BackgroundColor3 = color,
 	}, header)
@@ -297,8 +389,8 @@ local function headerBtn(text, xOff, color)
 	return b
 end
 
-local minBtn = headerBtn("-", -66, Color3.fromRGB(46, 50, 66))
-local closeBtn = headerBtn("X", -34, THEME.Danger)
+local minBtn = headerBtn("_", -56, Color3.fromRGB(46, 50, 66))
+local closeBtn = headerBtn("X", -30, THEME.Danger)
 
 -- body
 local body = make("Frame", {
@@ -308,21 +400,21 @@ local body = make("Frame", {
 }, hub)
 
 local grid = make("Frame", {
-	Position = UDim2.fromOffset(10, 12),
-	Size = UDim2.new(1, -20, 0, 208),
+	Position = UDim2.fromOffset(8, 8),
+	Size = UDim2.new(1, -16, 0, 56),
 	BackgroundTransparency = 1,
 }, body)
 make("UIGridLayout", {
-	CellSize = UDim2.new(0.5, -4, 0, 64),
-	CellPadding = UDim2.fromOffset(8, 8),
+	CellSize = UDim2.new(1 / 3, -4, 0, 56),
+	CellPadding = UDim2.fromOffset(6, 6),
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, grid)
 
 -- thanh trạng thái
 local footer = make("Frame", {
 	AnchorPoint = Vector2.new(0, 1),
-	Position = UDim2.new(0, 10, 1, -8),
-	Size = UDim2.new(1, -20, 0, 28),
+	Position = UDim2.new(0, 8, 1, -6),
+	Size = UDim2.new(1, -16, 0, 22),
 	BackgroundColor3 = THEME.Panel,
 }, body)
 corner(footer, 8)
@@ -337,7 +429,7 @@ corner(dot, 4)
 local statusLbl = make("TextLabel", {
 	BackgroundTransparency = 1,
 	Position = UDim2.fromOffset(26, 0),
-	Size = UDim2.new(1, -36, 1, 0),
+	Size = UDim2.new(1, -120, 1, 0),
 	Text = "Ready",
 	Font = Enum.Font.GothamMedium,
 	TextSize = 11,
@@ -351,9 +443,57 @@ local function setStatus(t)
 	TweenService:Create(dot, TweenInfo.new(0.6), { BackgroundColor3 = THEME.Accent }):Play()
 end
 
+-- ===== Phóng to / thu nhỏ menu =====
+local zoom = 1
+local ZOOM_MIN, ZOOM_MAX, ZOOM_STEP = 0.6, 1.3, 0.1
+
+local function zoomBtn(text, xOff)
+	local b = make("TextButton", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, xOff, 0.5, 0),
+		Size = UDim2.fromOffset(24, 16),
+		BackgroundColor3 = Color3.fromRGB(46, 50, 66),
+		Text = text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 9,
+		TextColor3 = Color3.new(1, 1, 1),
+	}, footer)
+	corner(b, 5)
+	return b
+end
+
+local zoomIn = zoomBtn("A+", -6)
+local zoomLbl = make("TextLabel", {
+	AnchorPoint = Vector2.new(1, 0.5),
+	Position = UDim2.new(1, -32, 0.5, 0),
+	Size = UDim2.fromOffset(32, 16),
+	BackgroundTransparency = 1,
+	Text = "100%",
+	Font = Enum.Font.GothamBold,
+	TextSize = 9,
+	TextColor3 = THEME.Sub,
+}, footer)
+local zoomOut = zoomBtn("A-", -66)
+
+local function applyZoom(z)
+	zoom = math.clamp(math.floor(z * 10 + 0.5) / 10, ZOOM_MIN, ZOOM_MAX)
+	zoomLbl.Text = math.floor(zoom * 100 + 0.5) .. "%"
+	TweenService:Create(hubScale, TweenInfo.new(0.15), { Scale = zoom }):Play()
+end
+
+zoomIn.MouseButton1Click:Connect(function() applyZoom(zoom + ZOOM_STEP) end)
+zoomOut.MouseButton1Click:Connect(function() applyZoom(zoom - ZOOM_STEP) end)
+
 ----------------------------------------------------------------
 -- THẺ CHỨC NĂNG
 ----------------------------------------------------------------
+local function resizeHub(h)
+	currentH = h
+	TweenService:Create(hub, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(W, h),
+	}):Play()
+end
+
 local function card(order, icon, name, isToggle, onClick)
 	local b = make("TextButton", {
 		Text = "",
@@ -361,7 +501,7 @@ local function card(order, icon, name, isToggle, onClick)
 		BackgroundColor3 = THEME.Card,
 		LayoutOrder = order,
 	}, grid)
-	corner(b, 10)
+	corner(b, 8)
 
 	local st = make("UIStroke", {
 		Color = THEME.Off,
@@ -372,39 +512,32 @@ local function card(order, icon, name, isToggle, onClick)
 
 	make("TextLabel", {
 		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(10, 6),
-		Size = UDim2.fromOffset(30, 30),
+		Position = UDim2.fromOffset(8, 6),
+		Size = UDim2.fromOffset(24, 24),
 		Text = icon,
-		TextSize = 22,
+		TextSize = 18,
 	}, b)
 
-	make("TextLabel", {
-		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(10, 40),
-		Size = UDim2.new(1, -16, 0, 16),
-		Text = name,
-		Font = Enum.Font.GothamBold,
-		TextSize = 12,
-		TextColor3 = THEME.Text,
-		TextXAlignment = Enum.TextXAlignment.Left,
-	}, b)
-
-	local pill = make("Frame", {
-		Position = UDim2.new(1, -44, 0, 10),
-		Size = UDim2.fromOffset(34, 16),
+	-- chấm trạng thái: xanh = đang bật
+	local dot = make("Frame", {
+		Position = UDim2.new(1, -16, 0, 8),
+		Size = UDim2.fromOffset(8, 8),
 		BackgroundColor3 = THEME.PillOff,
 		Visible = isToggle,
 	}, b)
-	corner(pill, 8)
+	corner(dot, 4)
 
-	local pillTxt = make("TextLabel", {
+	local nameLbl = make("TextLabel", {
 		BackgroundTransparency = 1,
-		Size = UDim2.fromScale(1, 1),
-		Text = "OFF",
+		Position = UDim2.fromOffset(8, 34),
+		Size = UDim2.new(1, -12, 0, 16),
+		Text = name,
 		Font = Enum.Font.GothamBold,
-		TextSize = 9,
-		TextColor3 = THEME.Sub,
-	}, pill)
+		TextScaled = true,
+		TextColor3 = THEME.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, b)
+	make("UITextSizeConstraint", { MaxTextSize = 11, MinTextSize = 7 }, nameLbl)
 
 	local api = { On = false }
 
@@ -416,9 +549,7 @@ local function card(order, icon, name, isToggle, onClick)
 			Color = on and THEME.Accent or THEME.Off,
 			Transparency = on and 0 or 0.5,
 		}):Play()
-		TweenService:Create(pill, ti, { BackgroundColor3 = on and THEME.Accent or THEME.PillOff }):Play()
-		pillTxt.Text = on and "ON" or "OFF"
-		pillTxt.TextColor3 = on and Color3.fromRGB(5, 20, 12) or THEME.Sub
+		TweenService:Create(dot, ti, { BackgroundColor3 = on and THEME.Accent or THEME.PillOff }):Play()
 	end
 
 	b.MouseButton1Click:Connect(function() onClick(api) end)
@@ -427,95 +558,289 @@ end
 
 local function onoff(v) return v and "ON" or "OFF" end
 
--- 1. Performance
-local disabledEmitters = {}
-card(1, "⚡", "Performance", true, function(c)
-	local on = not c.On
-	if on then
-		for _, v in ipairs(workspace:GetDescendants()) do
-			if v:IsA("ParticleEmitter") and v.Enabled then
-				v.Enabled = false
-				table.insert(disabledEmitters, v)
-			end
+-- ESP: mỗi loại một nút riêng
+local function espCard(order, icon, name, kind)
+	card(order, icon, name, true, function(c)
+		ESP[kind] = not ESP[kind]
+		c.Set(ESP[kind])
+		ESP.Refresh()
+		setStatus(name .. " " .. onoff(ESP[kind]))
+
+		if ESP[kind] then
+			task.delay(1.2, function()
+				if not ESP[kind] then return end
+				local n = ESP.CountKind(kind)
+				setStatus(n > 0
+					and (name .. " ON • " .. n .. " mục tiêu")
+					or (name .. ": chưa thấy mục tiêu nào"))
+			end)
 		end
-	else
-		for _, v in ipairs(disabledEmitters) do
-			if v.Parent then v.Enabled = true end
-		end
-		table.clear(disabledEmitters)
+	end)
+end
+
+espCard(1, "🤖", "ESP NPC", "NPC")
+espCard(2, "👁", "ESP Player", "Player")
+
+----------------------------------------------------------------
+-- TRANG INFO (thông tin game + mạng xã hội)
+----------------------------------------------------------------
+local MarketplaceService = game:GetService("MarketplaceService")
+local Stats = game:GetService("Stats")
+
+local infoPage = make("Frame", {
+	Position = UDim2.fromOffset(0, 0),
+	Size = UDim2.new(1, 0, 1, -34),  -- chừa chỗ cho thanh trạng thái
+	BackgroundColor3 = Color3.fromRGB(11, 12, 17),
+	BorderSizePixel = 0,
+	Visible = false,
+}, body)
+
+local backBtn = make("TextButton", {
+	Position = UDim2.fromOffset(10, 8),
+	Size = UDim2.fromOffset(86, 26),
+	BackgroundColor3 = Color3.fromRGB(46, 50, 66),
+	Text = "< QUAY LẠI",
+	Font = Enum.Font.GothamBold,
+	TextSize = 11,
+	TextColor3 = Color3.new(1, 1, 1),
+}, infoPage)
+corner(backBtn, 8)
+
+local infoTitle = make("TextLabel", {
+	BackgroundTransparency = 1,
+	Position = UDim2.new(0, 104, 0, 8),
+	Size = UDim2.new(1, -114, 0, 26),
+	Text = "⭐ THÔNG TIN",
+	Font = Enum.Font.GothamBlack,
+	TextSize = 13,
+	TextColor3 = Color3.new(1, 1, 1),
+	TextXAlignment = Enum.TextXAlignment.Right,
+}, infoPage)
+make("UIGradient", { Color = ColorSequence.new(THEME.Accent, THEME.Accent2) }, infoTitle)
+
+local scroll = make("ScrollingFrame", {
+	Position = UDim2.fromOffset(10, 42),
+	Size = UDim2.new(1, -20, 1, -46),
+	BackgroundTransparency = 1,
+	BorderSizePixel = 0,
+	ScrollBarThickness = 3,
+	ScrollBarImageColor3 = THEME.Accent,
+	AutomaticCanvasSize = Enum.AutomaticSize.Y,
+	CanvasSize = UDim2.new(),
+}, infoPage)
+make("UIListLayout", {
+	Padding = UDim.new(0, 6),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+}, scroll)
+make("UIPadding", { PaddingRight = UDim.new(0, 6) }, scroll)
+
+local infoOrder = 0
+local function nextOrder()
+	infoOrder += 1
+	return infoOrder
+end
+
+local function section(text)
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 18),
+		Text = text,
+		Font = Enum.Font.GothamBlack,
+		TextSize = 11,
+		TextColor3 = THEME.Accent,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		LayoutOrder = nextOrder(),
+	}, scroll)
+end
+
+local function row(labelText, initial)
+	local f = make("Frame", {
+		Size = UDim2.new(1, 0, 0, 26),
+		BackgroundColor3 = THEME.Card,
+		LayoutOrder = nextOrder(),
+	}, scroll)
+	corner(f, 8)
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(10, 0),
+		Size = UDim2.new(0.38, 0, 1, 0),
+		Text = labelText,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 11,
+		TextColor3 = THEME.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, f)
+	return make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0.38, 0, 0, 0),
+		Size = UDim2.new(0.62, -10, 1, 0),
+		Text = initial,
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		TextColor3 = THEME.Text,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+	}, f)
+end
+
+-- ===== Thông tin game đang chơi =====
+section("GAME ĐANG CHƠI")
+local rGame = row("Tên game", "Đang tải...")
+local rPlace = row("Place ID", tostring(game.PlaceId))
+local rPlayers = row("Người chơi", "-")
+local rPing = row("Ping", "-")
+local rFps = row("FPS", "-")
+local rUser = row("Tài khoản", p.DisplayName .. " (@" .. p.Name .. ")")
+
+task.spawn(function()
+	local ok, res = pcall(function()
+		return MarketplaceService:GetProductInfo(game.PlaceId)
+	end)
+	rGame.Text = (ok and res and res.Name) or "Không lấy được tên"
+end)
+
+local frames, fps = 0, 0
+local fpsConn
+
+local function startFps()
+	if fpsConn then return end
+	frames, fps = 0, 0
+	fpsConn = RunService.Heartbeat:Connect(function() frames += 1 end)
+end
+
+local function stopFps()
+	if fpsConn then
+		fpsConn:Disconnect()
+		fpsConn = nil
 	end
-	c.Set(on)
-	setStatus("Performance " .. onoff(on))
+end
+
+local function getPing()
+	local ok, v = pcall(function()
+		return math.floor(Stats.Network.ServerStatsItem["Data Ping"]:GetValue())
+	end)
+	return ok and (v .. " ms") or "-"
+end
+
+local function refreshInfo()
+	rPlayers.Text = #Players:GetPlayers() .. "/" .. Players.MaxPlayers
+	rPing.Text = getPing()
+	rFps.Text = fps > 0 and tostring(fps) or "..."
+end
+
+task.spawn(function()
+	while task.wait(1) do
+		if infoPage.Visible and hub.Visible then
+			startFps()
+			fps = frames
+			frames = 0
+			refreshInfo()
+		else
+			stopFps()  -- không xem Info thì không đếm gì cả
+		end
+	end
 end)
 
--- 2. ESP NPC
-card(2, "👁", "ESP NPC", true, function(c)
-	ESP.Toggle(not ESP.Enabled)
-	c.Set(ESP.Enabled)
-	setStatus("ESP NPC " .. onoff(ESP.Enabled))
-end)
+-- ===== Mạng xã hội =====
+section("LIÊN HỆ / MẠNG XÃ HỘI")
+for _, s in ipairs(INFO.Socials) do
+	local f = make("TextButton", {
+		Text = "",
+		AutoButtonColor = false,
+		Size = UDim2.new(1, 0, 0, 44),
+		BackgroundColor3 = THEME.Card,
+		LayoutOrder = nextOrder(),
+	}, scroll)
+	corner(f, 10)
+	make("UIStroke", {
+		Color = THEME.Off,
+		Thickness = 1,
+		Transparency = 0.5,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	}, f)
 
--- 3. Aim Assist (chưa có logic, chỉ bật/tắt biến)
-card(3, "🎯", "Aim Assist NPC", true, function(c)
-	_G.AimAssistNPC = not _G.AimAssistNPC
-	c.Set(_G.AimAssistNPC)
-	setStatus("Aim Assist " .. onoff(_G.AimAssistNPC))
-end)
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(6, 0),
+		Size = UDim2.fromOffset(32, 44),
+		Text = s.Icon,
+		TextSize = 20,
+		TextColor3 = THEME.Text,
+	}, f)
 
--- 4. Fast Reload
-card(4, "🔫", "Fast Reload VIP", true, function(c)
-	_G.FastReload = not _G.FastReload
-	c.Set(_G.FastReload)
-	setStatus("Fast Reload " .. onoff(_G.FastReload))
-end)
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(44, 5),
+		Size = UDim2.new(1, -118, 0, 16),
+		Text = s.Name,
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		TextColor3 = THEME.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, f)
 
--- 5. Aim Training (chưa có logic)
-card(5, "🏹", "Aim Training", true, function(c)
-	c.Set(not c.On)
-	setStatus("Aim Training " .. onoff(c.On))
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(44, 22),
+		Size = UDim2.new(1, -118, 0, 14),
+		Text = s.Link,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 10,
+		TextColor3 = THEME.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+	}, f)
+
+	local copy = make("TextButton", {
+		Position = UDim2.new(1, -66, 0.5, -13),
+		Size = UDim2.fromOffset(58, 26),
+		BackgroundColor3 = THEME.Accent,
+		Text = "MỞ",
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		TextColor3 = Color3.fromRGB(5, 20, 12),
+	}, f)
+	corner(copy, 8)
+
+	local function openLink()
+		-- luôn copy link để dự phòng (Roblox hay chặn mở web từ script)
+		local copied = type(setclipboard) == "function" and pcall(setclipboard, s.Link)
+		local opened = pcall(function()
+			game:GetService("GuiService"):OpenBrowserWindow(s.Link)
+		end)
+
+		if opened then
+			setStatus("Đang mở " .. s.Name .. (copied and "... (đã copy link phòng khi không mở được)" or "..."))
+		elseif copied then
+			setStatus("Đã copy link " .. s.Name .. ", dán vào trình duyệt")
+		else
+			setStatus(s.Name .. ": " .. s.Link)
+		end
+
+		copy.Text = "OK"
+		task.delay(1.5, function() copy.Text = "MỞ" end)
+	end
+
+	copy.MouseButton1Click:Connect(openLink)
+	f.MouseButton1Click:Connect(openLink)
+end
+
+-- ===== Tác giả =====
+section("TÁC GIẢ")
+row("Hub", INFO.Author .. " • " .. INFO.Version)
+
+backBtn.MouseButton1Click:Connect(function()
+	infoPage.Visible = false
+	resizeHub(H_FULL)  -- về lại kích thước nhỏ
+	setStatus("Ready")
 end)
 
 -- 6. Info
-card(6, "⭐", "Info", false, function()
-	setStatus("Vương Hóng Hớt Hub Lite • Gaming UI")
-end)
-
-----------------------------------------------------------------
--- VÒNG LẶP FAST RELOAD
-----------------------------------------------------------------
-task.spawn(function()
-	while task.wait() do
-		if _G.FastReload then
-			local char = p.Character
-			local tool = char and char:FindFirstChildOfClass("Tool")
-			if tool then
-				local hum = char:FindFirstChildOfClass("Humanoid")
-				local animator = hum and hum:FindFirstChildOfClass("Animator")
-				if animator then
-					for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-						if track.Name:lower():find("reload") then
-							track:Stop(0)
-						end
-					end
-				end
-
-				for _, item in pairs(tool:GetDescendants()) do
-					if item:IsA("NumberValue") or item:IsA("IntValue") then
-						local name = item.Name:lower()
-						if name:find("reload") or name:find("cooldown") or name:find("delay") then
-							item.Value = 0
-						end
-					end
-				end
-
-				local ammo = tool:FindFirstChild("Ammo") or tool:FindFirstChild("Clip") or tool:FindFirstChild("CurrentAmmo")
-				local maxAmmo = tool:FindFirstChild("MaxAmmo") or tool:FindFirstChild("MaxClip")
-				if ammo and maxAmmo and ammo:IsA("ValueBase") and maxAmmo:IsA("ValueBase") then
-					ammo.Value = maxAmmo.Value
-				end
-			end
-		end
-	end
+card(3, "⭐", "Info", false, function()
+	resizeHub(H_INFO)  -- chỉ giãn ra khi xem Info
+	infoPage.Visible = true
+	refreshInfo()
+	setStatus("Thông tin game & liên hệ")
 end)
 
 ----------------------------------------------------------------
@@ -528,10 +853,10 @@ local function showHub(state)
 	hubOpen = state
 	if state then
 		hub.Visible = true
-		hubScale.Scale = 0.85
-		TweenService:Create(hubScale, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+		hubScale.Scale = zoom * 0.85
+		TweenService:Create(hubScale, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = zoom }):Play()
 	else
-		local t = TweenService:Create(hubScale, TweenInfo.new(0.15), { Scale = 0.85 })
+		local t = TweenService:Create(hubScale, TweenInfo.new(0.15), { Scale = zoom * 0.85 })
 		t:Play()
 		t.Completed:Once(function()
 			if not hubOpen then hub.Visible = false end
@@ -543,9 +868,9 @@ local function setMinimized(state)
 	minimized = state
 	body.Visible = not state
 	TweenService:Create(hub, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Size = UDim2.fromOffset(W, state and H_MIN or H_FULL),
+		Size = UDim2.fromOffset(W, state and H_MIN or currentH),
 	}):Play()
-	minBtn.Text = state and "+" or "-"
+	minBtn.Text = state and "+" or "_"
 end
 
 open.MouseButton1Click:Connect(function() showHub(not hubOpen) end)
