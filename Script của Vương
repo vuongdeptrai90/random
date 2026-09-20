@@ -1,0 +1,553 @@
+-- ☠ VƯƠNG HÓNG HỚT HUB LITE — GAMING UI ☠
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Camera = workspace.CurrentCamera
+local p = Players.LocalPlayer
+
+----------------------------------------------------------------
+-- CẤU HÌNH GIAO DIỆN
+----------------------------------------------------------------
+local LOGO_ID = ""  -- ID ảnh mèo chuối (Decal). Để trống thì dùng emoji 🍌
+
+local THEME = {
+	Panel   = Color3.fromRGB(19, 21, 30),
+	Card    = Color3.fromRGB(24, 27, 38),
+	CardOn  = Color3.fromRGB(12, 44, 32),
+	Accent  = Color3.fromRGB(0, 255, 130),
+	Accent2 = Color3.fromRGB(0, 170, 255),
+	Off     = Color3.fromRGB(90, 96, 115),
+	PillOff = Color3.fromRGB(45, 49, 64),
+	Text    = Color3.fromRGB(235, 240, 250),
+	Sub     = Color3.fromRGB(140, 148, 170),
+	Danger  = Color3.fromRGB(230, 60, 75),
+}
+
+local W, H_FULL, H_MIN = 300, 308, 46
+
+local function make(class, props, parent)
+	local o = Instance.new(class)
+	for k, v in pairs(props) do o[k] = v end
+	o.Parent = parent
+	return o
+end
+
+local function corner(obj, r)
+	return make("UICorner", { CornerRadius = UDim.new(0, r) }, obj)
+end
+
+----------------------------------------------------------------
+-- GUI GỐC + LOGO
+----------------------------------------------------------------
+local gui = make("ScreenGui", {
+	Name = "VuongHub",
+	ResetOnSpawn = false,
+	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+}, p:WaitForChild("PlayerGui"))
+
+local open = make("ImageButton", {
+	Name = "Logo",
+	Size = UDim2.fromOffset(64, 64),
+	Position = UDim2.new(0, 20, 0.5, -32),
+	BackgroundColor3 = Color3.fromRGB(255, 221, 51),
+	BackgroundTransparency = LOGO_ID ~= "" and 1 or 0,
+	Image = LOGO_ID ~= "" and ("rbxassetid://" .. LOGO_ID) or "",
+	ScaleType = Enum.ScaleType.Fit,
+	Draggable = true,
+}, gui)
+corner(open, 32)
+
+local logoStroke = make("UIStroke", { Color = THEME.Accent, Thickness = 2.5 }, open)
+TweenService:Create(
+	logoStroke,
+	TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+	{ Thickness = 4.5, Transparency = 0.45 }
+):Play()
+
+if LOGO_ID == "" then
+	make("TextLabel", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		Text = "🍌",
+		TextScaled = true,
+	}, open)
+end
+
+----------------------------------------------------------------
+-- ESP NPC
+----------------------------------------------------------------
+local ESP = { Enabled = false, Tracked = {}, Conns = {} }
+
+local ESP_CONFIG = {
+	Color = Color3.fromRGB(0, 255, 100),
+	LowHealthColor = Color3.fromRGB(255, 60, 60),
+	FillTransparency = 0.5,
+	MaxDistance = 500,
+	UpdateRate = 0.1,
+}
+
+local espFolder = make("Folder", { Name = "ESPFolder" }, gui)
+
+local function isNPC(model)
+	return model:IsA("Model")
+		and model:FindFirstChildOfClass("Humanoid") ~= nil
+		and Players:GetPlayerFromCharacter(model) == nil
+end
+
+local function removeNPC(model)
+	local data = ESP.Tracked[model]
+	if not data then return end
+	data.Highlight:Destroy()
+	data.Gui:Destroy()
+	ESP.Tracked[model] = nil
+end
+
+local function addNPC(model)
+	if ESP.Tracked[model] or not isNPC(model) then return end
+	local adornee = model:FindFirstChild("Head")
+		or model:FindFirstChild("HumanoidRootPart")
+		or model.PrimaryPart
+	if not adornee then return end
+
+	local h = make("Highlight", {
+		Adornee = model,
+		DepthMode = Enum.HighlightDepthMode.AlwaysOnTop,
+		FillColor = ESP_CONFIG.Color,
+		OutlineColor = Color3.new(1, 1, 1),
+		FillTransparency = ESP_CONFIG.FillTransparency,
+	}, espFolder)
+
+	local bb = make("BillboardGui", {
+		Adornee = adornee,
+		AlwaysOnTop = true,
+		Size = UDim2.fromOffset(140, 30),
+		StudsOffset = Vector3.new(0, 2.5, 0),
+	}, espFolder)
+
+	local lbl = make("TextLabel", {
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		TextColor3 = Color3.new(1, 1, 1),
+		TextStrokeTransparency = 0.3,
+	}, bb)
+
+	ESP.Tracked[model] = { Highlight = h, Gui = bb, Label = lbl }
+end
+
+local function clearAll()
+	for model in pairs(ESP.Tracked) do removeNPC(model) end
+	for _, c in ipairs(ESP.Conns) do c:Disconnect() end
+	table.clear(ESP.Conns)
+end
+
+local function enableESP()
+	for _, v in ipairs(workspace:GetDescendants()) do
+		if v:IsA("Humanoid") and v.Parent then addNPC(v.Parent) end
+	end
+
+	table.insert(ESP.Conns, workspace.DescendantAdded:Connect(function(v)
+		if v:IsA("Humanoid") then
+			task.defer(function()
+				if v.Parent then addNPC(v.Parent) end
+			end)
+		end
+	end))
+
+	table.insert(ESP.Conns, workspace.DescendantRemoving:Connect(function(v)
+		if ESP.Tracked[v] then removeNPC(v) end
+	end))
+
+	local acc = 0
+	table.insert(ESP.Conns, RunService.Heartbeat:Connect(function(dt)
+		acc += dt
+		if acc < ESP_CONFIG.UpdateRate then return end
+		acc = 0
+
+		local myRoot = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+		local origin = myRoot and myRoot.Position or Camera.CFrame.Position
+
+		for model, data in pairs(ESP.Tracked) do
+			local hum = model:FindFirstChildOfClass("Humanoid")
+			local root = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart
+
+			if not model:IsDescendantOf(workspace) or not hum then
+				removeNPC(model)
+			else
+				local dist = root and (root.Position - origin).Magnitude or math.huge
+				local visible = hum.Health > 0 and dist <= ESP_CONFIG.MaxDistance
+
+				data.Highlight.Enabled = visible
+				data.Gui.Enabled = visible
+
+				if visible then
+					local ratio = math.clamp(hum.Health / math.max(hum.MaxHealth, 1), 0, 1)
+					data.Highlight.FillColor = ESP_CONFIG.LowHealthColor:Lerp(ESP_CONFIG.Color, ratio)
+					data.Label.Text = string.format("%s | %d HP | %dm",
+						model.Name, math.floor(hum.Health), math.floor(dist))
+				end
+			end
+		end
+	end))
+end
+
+function ESP.Toggle(state)
+	ESP.Enabled = state
+	if state then enableESP() else clearAll() end
+end
+
+----------------------------------------------------------------
+-- KHUNG HUB
+----------------------------------------------------------------
+local hub = make("Frame", {
+	Name = "Hub",
+	Size = UDim2.fromOffset(W, H_FULL),
+	Position = UDim2.new(0.5, -W / 2, 0.5, -H_FULL / 2),
+	BackgroundColor3 = Color3.new(1, 1, 1),
+	Visible = false,
+	Active = true,
+	Draggable = true,
+	ClipsDescendants = true,
+}, gui)
+corner(hub, 14)
+make("UIGradient", {
+	Color = ColorSequence.new(Color3.fromRGB(17, 20, 30), Color3.fromRGB(8, 9, 13)),
+	Rotation = 90,
+}, hub)
+
+local hubScale = make("UIScale", { Scale = 1 }, hub)
+
+-- viền neon chạy màu
+local hubStroke = make("UIStroke", {
+	Thickness = 2,
+	Color = Color3.new(1, 1, 1),
+	ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+}, hub)
+local hubGrad = make("UIGradient", {
+	Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, THEME.Accent),
+		ColorSequenceKeypoint.new(0.5, THEME.Accent2),
+		ColorSequenceKeypoint.new(1, THEME.Accent),
+	}),
+}, hubStroke)
+
+RunService.Heartbeat:Connect(function(dt)
+	if hub.Visible then
+		hubGrad.Rotation = (hubGrad.Rotation + dt * 90) % 360
+	end
+end)
+
+-- header
+local header = make("Frame", {
+	Size = UDim2.new(1, 0, 0, H_MIN),
+	BackgroundColor3 = Color3.new(1, 1, 1),
+	BorderSizePixel = 0,
+}, hub)
+make("UIGradient", {
+	Color = ColorSequence.new(Color3.fromRGB(28, 32, 48), Color3.fromRGB(16, 18, 26)),
+	Rotation = 90,
+}, header)
+
+local title = make("TextLabel", {
+	BackgroundTransparency = 1,
+	Position = UDim2.fromOffset(14, 5),
+	Size = UDim2.new(1, -110, 0, 22),
+	Text = "☠ VƯƠNG HÓNG HỚT",
+	Font = Enum.Font.GothamBlack,
+	TextSize = 15,
+	TextColor3 = Color3.new(1, 1, 1),
+	TextXAlignment = Enum.TextXAlignment.Left,
+}, header)
+make("UIGradient", { Color = ColorSequence.new(THEME.Accent, THEME.Accent2) }, title)
+
+make("TextLabel", {
+	BackgroundTransparency = 1,
+	Position = UDim2.fromOffset(14, 26),
+	Size = UDim2.new(1, -110, 0, 14),
+	Text = "HUB LITE  •  GAMING EDITION",
+	Font = Enum.Font.GothamMedium,
+	TextSize = 10,
+	TextColor3 = THEME.Sub,
+	TextXAlignment = Enum.TextXAlignment.Left,
+}, header)
+
+-- đường sáng dưới header
+local line = make("Frame", {
+	AnchorPoint = Vector2.new(0, 1),
+	Position = UDim2.fromScale(0, 1),
+	Size = UDim2.new(1, 0, 0, 2),
+	BackgroundColor3 = Color3.new(1, 1, 1),
+	BorderSizePixel = 0,
+}, header)
+make("UIGradient", { Color = ColorSequence.new(THEME.Accent, THEME.Accent2) }, line)
+
+local function headerBtn(text, xOff, color)
+	local b = make("TextButton", {
+		Size = UDim2.fromOffset(28, 28),
+		Position = UDim2.new(1, xOff, 0, 9),
+		Text = text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 14,
+		TextColor3 = Color3.new(1, 1, 1),
+		BackgroundColor3 = color,
+	}, header)
+	corner(b, 8)
+	return b
+end
+
+local minBtn = headerBtn("-", -66, Color3.fromRGB(46, 50, 66))
+local closeBtn = headerBtn("X", -34, THEME.Danger)
+
+-- body
+local body = make("Frame", {
+	Position = UDim2.fromOffset(0, H_MIN),
+	Size = UDim2.new(1, 0, 1, -H_MIN),
+	BackgroundTransparency = 1,
+}, hub)
+
+local grid = make("Frame", {
+	Position = UDim2.fromOffset(10, 12),
+	Size = UDim2.new(1, -20, 0, 208),
+	BackgroundTransparency = 1,
+}, body)
+make("UIGridLayout", {
+	CellSize = UDim2.new(0.5, -4, 0, 64),
+	CellPadding = UDim2.fromOffset(8, 8),
+	SortOrder = Enum.SortOrder.LayoutOrder,
+}, grid)
+
+-- thanh trạng thái
+local footer = make("Frame", {
+	AnchorPoint = Vector2.new(0, 1),
+	Position = UDim2.new(0, 10, 1, -8),
+	Size = UDim2.new(1, -20, 0, 28),
+	BackgroundColor3 = THEME.Panel,
+}, body)
+corner(footer, 8)
+
+local dot = make("Frame", {
+	Size = UDim2.fromOffset(8, 8),
+	Position = UDim2.new(0, 10, 0.5, -4),
+	BackgroundColor3 = THEME.Accent,
+}, footer)
+corner(dot, 4)
+
+local statusLbl = make("TextLabel", {
+	BackgroundTransparency = 1,
+	Position = UDim2.fromOffset(26, 0),
+	Size = UDim2.new(1, -36, 1, 0),
+	Text = "Ready",
+	Font = Enum.Font.GothamMedium,
+	TextSize = 11,
+	TextColor3 = THEME.Sub,
+	TextXAlignment = Enum.TextXAlignment.Left,
+}, footer)
+
+local function setStatus(t)
+	statusLbl.Text = t
+	dot.BackgroundColor3 = THEME.Accent2
+	TweenService:Create(dot, TweenInfo.new(0.6), { BackgroundColor3 = THEME.Accent }):Play()
+end
+
+----------------------------------------------------------------
+-- THẺ CHỨC NĂNG
+----------------------------------------------------------------
+local function card(order, icon, name, isToggle, onClick)
+	local b = make("TextButton", {
+		Text = "",
+		AutoButtonColor = false,
+		BackgroundColor3 = THEME.Card,
+		LayoutOrder = order,
+	}, grid)
+	corner(b, 10)
+
+	local st = make("UIStroke", {
+		Color = THEME.Off,
+		Thickness = 1.2,
+		Transparency = 0.5,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	}, b)
+
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(10, 6),
+		Size = UDim2.fromOffset(30, 30),
+		Text = icon,
+		TextSize = 22,
+	}, b)
+
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(10, 40),
+		Size = UDim2.new(1, -16, 0, 16),
+		Text = name,
+		Font = Enum.Font.GothamBold,
+		TextSize = 12,
+		TextColor3 = THEME.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+	}, b)
+
+	local pill = make("Frame", {
+		Position = UDim2.new(1, -44, 0, 10),
+		Size = UDim2.fromOffset(34, 16),
+		BackgroundColor3 = THEME.PillOff,
+		Visible = isToggle,
+	}, b)
+	corner(pill, 8)
+
+	local pillTxt = make("TextLabel", {
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+		Text = "OFF",
+		Font = Enum.Font.GothamBold,
+		TextSize = 9,
+		TextColor3 = THEME.Sub,
+	}, pill)
+
+	local api = { On = false }
+
+	function api.Set(on)
+		api.On = on
+		local ti = TweenInfo.new(0.2)
+		TweenService:Create(b, ti, { BackgroundColor3 = on and THEME.CardOn or THEME.Card }):Play()
+		TweenService:Create(st, ti, {
+			Color = on and THEME.Accent or THEME.Off,
+			Transparency = on and 0 or 0.5,
+		}):Play()
+		TweenService:Create(pill, ti, { BackgroundColor3 = on and THEME.Accent or THEME.PillOff }):Play()
+		pillTxt.Text = on and "ON" or "OFF"
+		pillTxt.TextColor3 = on and Color3.fromRGB(5, 20, 12) or THEME.Sub
+	end
+
+	b.MouseButton1Click:Connect(function() onClick(api) end)
+	return api
+end
+
+local function onoff(v) return v and "ON" or "OFF" end
+
+-- 1. Performance
+local disabledEmitters = {}
+card(1, "⚡", "Performance", true, function(c)
+	local on = not c.On
+	if on then
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if v:IsA("ParticleEmitter") and v.Enabled then
+				v.Enabled = false
+				table.insert(disabledEmitters, v)
+			end
+		end
+	else
+		for _, v in ipairs(disabledEmitters) do
+			if v.Parent then v.Enabled = true end
+		end
+		table.clear(disabledEmitters)
+	end
+	c.Set(on)
+	setStatus("Performance " .. onoff(on))
+end)
+
+-- 2. ESP NPC
+card(2, "👁", "ESP NPC", true, function(c)
+	ESP.Toggle(not ESP.Enabled)
+	c.Set(ESP.Enabled)
+	setStatus("ESP NPC " .. onoff(ESP.Enabled))
+end)
+
+-- 3. Aim Assist (chưa có logic, chỉ bật/tắt biến)
+card(3, "🎯", "Aim Assist NPC", true, function(c)
+	_G.AimAssistNPC = not _G.AimAssistNPC
+	c.Set(_G.AimAssistNPC)
+	setStatus("Aim Assist " .. onoff(_G.AimAssistNPC))
+end)
+
+-- 4. Fast Reload
+card(4, "🔫", "Fast Reload VIP", true, function(c)
+	_G.FastReload = not _G.FastReload
+	c.Set(_G.FastReload)
+	setStatus("Fast Reload " .. onoff(_G.FastReload))
+end)
+
+-- 5. Aim Training (chưa có logic)
+card(5, "🏹", "Aim Training", true, function(c)
+	c.Set(not c.On)
+	setStatus("Aim Training " .. onoff(c.On))
+end)
+
+-- 6. Info
+card(6, "⭐", "Info", false, function()
+	setStatus("Vương Hóng Hớt Hub Lite • Gaming UI")
+end)
+
+----------------------------------------------------------------
+-- VÒNG LẶP FAST RELOAD
+----------------------------------------------------------------
+task.spawn(function()
+	while task.wait() do
+		if _G.FastReload then
+			local char = p.Character
+			local tool = char and char:FindFirstChildOfClass("Tool")
+			if tool then
+				local hum = char:FindFirstChildOfClass("Humanoid")
+				local animator = hum and hum:FindFirstChildOfClass("Animator")
+				if animator then
+					for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+						if track.Name:lower():find("reload") then
+							track:Stop(0)
+						end
+					end
+				end
+
+				for _, item in pairs(tool:GetDescendants()) do
+					if item:IsA("NumberValue") or item:IsA("IntValue") then
+						local name = item.Name:lower()
+						if name:find("reload") or name:find("cooldown") or name:find("delay") then
+							item.Value = 0
+						end
+					end
+				end
+
+				local ammo = tool:FindFirstChild("Ammo") or tool:FindFirstChild("Clip") or tool:FindFirstChild("CurrentAmmo")
+				local maxAmmo = tool:FindFirstChild("MaxAmmo") or tool:FindFirstChild("MaxClip")
+				if ammo and maxAmmo and ammo:IsA("ValueBase") and maxAmmo:IsA("ValueBase") then
+					ammo.Value = maxAmmo.Value
+				end
+			end
+		end
+	end
+end)
+
+----------------------------------------------------------------
+-- MỞ / ĐÓNG / THU NHỎ
+----------------------------------------------------------------
+local hubOpen = false
+local minimized = false
+
+local function showHub(state)
+	hubOpen = state
+	if state then
+		hub.Visible = true
+		hubScale.Scale = 0.85
+		TweenService:Create(hubScale, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+	else
+		local t = TweenService:Create(hubScale, TweenInfo.new(0.15), { Scale = 0.85 })
+		t:Play()
+		t.Completed:Once(function()
+			if not hubOpen then hub.Visible = false end
+		end)
+	end
+end
+
+local function setMinimized(state)
+	minimized = state
+	body.Visible = not state
+	TweenService:Create(hub, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = UDim2.fromOffset(W, state and H_MIN or H_FULL),
+	}):Play()
+	minBtn.Text = state and "+" or "-"
+end
+
+open.MouseButton1Click:Connect(function() showHub(not hubOpen) end)
+closeBtn.MouseButton1Click:Connect(function() showHub(false) end)
+minBtn.MouseButton1Click:Connect(function() setMinimized(not minimized) end)
