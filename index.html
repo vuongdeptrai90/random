@@ -27,13 +27,15 @@ display:flex;
 justify-content:center;
 align-items:center;
 
-overflow:hidden;
+overflow-x:hidden;
 
 color:white;
 
 background:
 radial-gradient(circle at top,#00eaff55,transparent 40%),
 linear-gradient(135deg,#030303,#151515,#222);
+
+padding:20px 0;
 
 }
 
@@ -108,6 +110,9 @@ text-align:center;
 
 
 animation:show .7s;
+
+position:relative;
+z-index:1;
 
 
 }
@@ -375,6 +380,65 @@ font-weight:bold;
 
 }
 
+/* KHU VỰC THÔNG TIN LIÊN HỆ */
+.contact-section {
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+.contact-title {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.social-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 15px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.social-btn.youtube {
+  background: linear-gradient(45deg, #ff0000, #cc0000);
+  color: white;
+  box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
+}
+
+.social-btn.gmail {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.social-btn:hover {
+  transform: translateY(-3px);
+}
+
+.social-btn.youtube:hover {
+  box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
+}
+
+.social-btn.gmail:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #00eaff;
+}
+
 
 </style>
 
@@ -470,6 +534,22 @@ lần
 
 </p>
 
+
+<!-- BỔ SUNG KHU VỰC LIÊN HỆ -->
+<div class="contact-section">
+  <div class="contact-title">📌 Kênh Liên Hệ & Hỗ Trợ</div>
+  <div class="social-links">
+    
+    <a href="https://youtube.com/@vuonghothot?si=X_A8s2qco4FYY1TW" target="_blank" class="social-btn youtube">
+      ▶️ Đăng Ký YouTube Vương Hóng Hớt
+    </a>
+
+    <a href="mailto:nguyenquocvuong02004@gmail.com" class="social-btn gmail">
+      ✉️ Gmail: nguyenquocvuong02004@gmail.com
+    </a>
+
+  </div>
+</div>
 
 
 </div>
