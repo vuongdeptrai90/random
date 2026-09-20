@@ -1,147 +1,486 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Vương Hóng Hớt - Random Acc</title>
 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+
 <style>
+
 *{
-    box-sizing:border-box;
-    font-family:Arial,sans-serif;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
 }
+
 
 body{
-    margin:0;
-    min-height:100vh;
-    background:linear-gradient(135deg,#050505,#222);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    color:white;
+
+margin:0;
+min-height:100vh;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+overflow:hidden;
+
+color:white;
+
+background:
+radial-gradient(circle at top,#00eaff55,transparent 40%),
+linear-gradient(135deg,#030303,#151515,#222);
+
 }
+
+
+/* nền chuyển động */
+
+body:before{
+
+content:"";
+
+position:absolute;
+
+width:500px;
+height:500px;
+
+background:#00eaff;
+
+filter:blur(180px);
+
+opacity:.3;
+
+animation:bgmove 8s infinite alternate;
+
+}
+
+
+
+@keyframes bgmove{
+
+from{
+transform:translate(-200px,-100px);
+}
+
+to{
+transform:translate(200px,100px);
+}
+
+}
+
+
 
 .box{
-    width:95%;
-    max-width:430px;
-    background:#151515;
-    padding:25px;
-    border-radius:20px;
-    box-shadow:0 0 25px #000;
-    text-align:center;
+
+
+width:95%;
+
+max-width:430px;
+
+padding:30px;
+
+
+background:
+
+rgba(255,255,255,.08);
+
+
+backdrop-filter:blur(15px);
+
+
+border-radius:25px;
+
+
+border:1px solid rgba(255,255,255,.2);
+
+
+box-shadow:
+
+0 0 40px #00eaff55;
+
+
+text-align:center;
+
+
+animation:show .7s;
+
+
 }
+
+
+
+@keyframes show{
+
+from{
+
+opacity:0;
+
+transform:translateY(50px);
+
+}
+
+to{
+
+opacity:1;
+
+transform:none;
+
+}
+
+}
+
+
 
 .logo{
-    font-size:45px;
+
+font-size:65px;
+
+animation:float 2s infinite;
+
 }
+
+
+@keyframes float{
+
+50%{
+
+transform:translateY(-10px);
+
+}
+
+}
+
+
 
 h1{
-    color:#00eaff;
+
+margin:5px;
+
+font-size:30px;
+
+color:#00eaff;
+
+
+text-shadow:
+
+0 0 20px #00eaff;
+
 }
 
-select,button{
-    width:100%;
-    padding:14px;
-    margin-top:12px;
-    border:0;
-    border-radius:12px;
-    font-size:16px;
+
+
+p{
+
+color:#ddd;
+
 }
+
+
+
+select,
+button{
+
+
+width:100%;
+
+padding:15px;
+
+margin-top:15px;
+
+
+border:none;
+
+border-radius:15px;
+
+
+font-size:16px;
+
+}
+
+
 
 select{
-    background:#292929;
-    color:white;
+
+
+background:#111;
+
+color:white;
+
+border:1px solid #00eaff;
+
+
 }
+
+
 
 button{
-    background:#00eaff;
-    font-weight:bold;
-    cursor:pointer;
+
+
+background:
+
+linear-gradient(45deg,#00eaff,#008cff);
+
+
+font-weight:bold;
+
+cursor:pointer;
+
+
+box-shadow:
+
+0 0 20px #00eaff;
+
+
+transition:.3s;
+
+
 }
+
+
+
+button:hover{
+
+transform:scale(1.05);
+
+}
+
+
+
+button:active{
+
+transform:scale(.95);
+
+}
+
+
 
 button:disabled{
-    background:#555;
-    color:#aaa;
+
+
+background:#555;
+
+box-shadow:none;
+
 }
+
+
 
 .result{
-    display:none;
-    margin-top:20px;
-    background:#222;
-    padding:18px;
-    border-radius:15px;
-    text-align:left;
+
+
+display:none;
+
+margin-top:20px;
+
+padding:20px;
+
+
+border-radius:20px;
+
+
+background:
+
+rgba(0,0,0,.45);
+
+
+border:1px solid #00eaff;
+
+
+animation:popup .5s;
+
 }
+
+
+
+@keyframes popup{
+
+
+from{
+
+opacity:0;
+
+transform:scale(.7);
+
+}
+
+
+to{
+
+opacity:1;
+
+transform:scale(1);
+
+}
+
+}
+
+
+
+.result p{
+
+
+background:#111;
+
+padding:10px;
+
+border-radius:10px;
+
+
+color:white;
+
+
+}
+
+
 
 .copy{
-    background:#00ff88;
+
+
+background:
+
+linear-gradient(45deg,#00ff88,#00cc55);
+
+
+box-shadow:
+
+0 0 20px #00ff88;
+
+
 }
 
+
+
 #cooldown{
-    color:#ffd700;
+
+color:#ffd700;
+
+font-weight:bold;
+
 }
+
+
+
+#count{
+
+color:#00ff88;
+
+font-size:22px;
+
+font-weight:bold;
+
+}
+
+
 </style>
 
 </head>
 
+
+
 <body>
+
 
 <div class="box">
 
-<div class="logo">🎁</div>
 
-<h1>Vương Hóng Hớt</h1>
+<div class="logo">
+🎁
+</div>
 
-<p>Random Acc Liên Quân miễn phí</p>
+
+<h1>
+Vương Hóng Hớt
+</h1>
+
+
+<p>
+🔥 Random Acc Liên Quân Miễn Phí 🔥
+</p>
+
 
 
 <select id="type">
 
-<option value="all">🎲 Tất cả acc</option>
+<option value="all">
+🎲 Tất cả acc
+</option>
 
-<option value="vip">⭐ Acc VIP</option>
+<option value="vip">
+⭐ Acc VIP
+</option>
 
-<option value="normal">🆓 Acc thường</option>
+<option value="normal">
+🆓 Acc thường
+</option>
 
 </select>
 
 
+
 <button id="randomBtn" onclick="randomAcc()">
-🎲 RANDOM ACC
+
+🎁 RANDOM ACC NGAY
+
 </button>
 
 
 <p id="cooldown"></p>
 
 
+
 <div class="result" id="result">
 
+
 <p id="user"></p>
+
 <p id="pass"></p>
+
 <p id="rank"></p>
+
 <p id="skin"></p>
 
+
+
 <button class="copy" onclick="copyAcc()">
+
 📋 COPY ACC
+
 </button>
 
+
+
 </div>
+
 
 
 <p>
-Đã random:
-<span id="count">0</span> lần
+
+🎯 Đã random:
+
+<span id="count">
+0
+</span>
+
+lần
+
 </p>
 
 
+
 </div>
+
 
 
 <script>
 
 
-const accounts = [
+const accounts=[
+
 
 {
 user:"banamaka",
@@ -151,6 +490,7 @@ skin:"200+ Skin",
 type:"vip"
 },
 
+
 {
 user:"nghiempro123z",
 pass:"0813751686a",
@@ -158,6 +498,7 @@ rank:"Cao Thủ",
 skin:"150+ Skin",
 type:"vip"
 },
+
 
 {
 user:"reaogamer",
@@ -167,6 +508,7 @@ skin:"50 Skin",
 type:"normal"
 },
 
+
 {
 user:"phieulv5555",
 pass:"khang110",
@@ -175,57 +517,67 @@ skin:"30 Skin",
 type:"normal"
 }
 
+
 ];
+
 
 
 let currentAcc="";
 
 
-let count = Number(localStorage.getItem("count")) || 0;
+let count=
+Number(localStorage.getItem("count"))||0;
+
 
 document.getElementById("count").innerHTML=count;
 
 
-const timeWait = 24*60*60*1000;
+
+const wait=
+24*60*60*1000;
 
 
 
 function randomAcc(){
 
-let last = localStorage.getItem("randomTime");
-
-let now = Date.now();
 
 
-if(last && now-last < timeWait){
+let last=
+localStorage.getItem("randomTime");
 
-alert("⏳ Bạn đã nhận acc hôm nay!");
+
+if(last && Date.now()-last < wait){
+
+
+alert("⏳ Bạn đã random hôm nay rồi!");
+
 
 startTimer();
 
+
 return;
+
 
 }
 
 
-let type = document.getElementById("type").value;
+
+let type=
+document.getElementById("type").value;
 
 
-let list = accounts.filter(acc =>
-type=="all" || acc.type==type
+
+let list=
+accounts.filter(a=>
+
+type=="all" || a.type==type
+
 );
 
 
-if(list.length==0){
 
-alert("Không có acc loại này!");
-
-return;
-
-}
-
-
-let acc = list[Math.floor(Math.random()*list.length)];
+let acc=
+list[Math.floor(Math.random()*list.length)];
 
 
 
@@ -245,11 +597,13 @@ document.getElementById("skin").innerHTML=
 "🎭 Skin: "+acc.skin;
 
 
+
 document.getElementById("result").style.display="block";
 
 
 
-currentAcc =
+currentAcc=
+
 "Tài khoản: "+acc.user+
 "\nMật khẩu: "+acc.pass+
 "\nRank: "+acc.rank+
@@ -266,16 +620,21 @@ Date.now()
 
 count++;
 
+
 localStorage.setItem(
 "count",
 count
 );
 
 
+
 document.getElementById("count").innerHTML=count;
 
 
+
 startTimer();
+
+
 
 }
 
@@ -284,9 +643,12 @@ startTimer();
 
 function copyAcc(){
 
+
 navigator.clipboard.writeText(currentAcc);
 
-alert("✅ Đã copy thông tin acc");
+
+alert("✅ Đã copy acc");
+
 
 }
 
@@ -299,32 +661,26 @@ function startTimer(){
 let timer=setInterval(()=>{
 
 
-let last =
+let last=
 localStorage.getItem("randomTime");
 
 
-if(!last){
-
-clearInterval(timer);
-return;
-
-}
-
-
-let remain =
-timeWait-(Date.now()-last);
+let remain=
+wait-(Date.now()-last);
 
 
 
 if(remain<=0){
+
 
 clearInterval(timer);
 
 
 document.getElementById("randomBtn").disabled=false;
 
+
 document.getElementById("randomBtn").innerHTML=
-"🎲 RANDOM ACC";
+"🎁 RANDOM ACC NGAY";
 
 
 document.getElementById("cooldown").innerHTML=
@@ -337,26 +693,37 @@ return;
 
 
 
-let h=Math.floor(remain/3600000);
+let h=
+Math.floor(remain/3600000);
 
-let m=Math.floor((remain%3600000)/60000);
 
-let s=Math.floor((remain%60000)/1000);
+let m=
+Math.floor((remain%3600000)/60000);
+
+
+let s=
+Math.floor((remain%60000)/1000);
 
 
 
 document.getElementById("cooldown").innerHTML=
-"⏳ Còn lại: "+h+" giờ "+m+" phút "+s+" giây";
+
+"⏳ Còn lại: "
++h+" giờ "
++m+" phút "
++s+" giây";
 
 
 
 document.getElementById("randomBtn").disabled=true;
 
+
 document.getElementById("randomBtn").innerHTML=
-"⏳ Đang chờ";
+"⏳ ĐANG CHỜ";
 
 
 },1000);
+
 
 }
 
@@ -365,15 +732,17 @@ document.getElementById("randomBtn").innerHTML=
 
 function check(){
 
-let last =
+
+let last=
 localStorage.getItem("randomTime");
 
 
-if(last && Date.now()-last < timeWait){
+if(last && Date.now()-last < wait){
 
 startTimer();
 
 }
+
 
 }
 
@@ -381,7 +750,9 @@ startTimer();
 check();
 
 
+
 </script>
+
 
 </body>
 </html>
