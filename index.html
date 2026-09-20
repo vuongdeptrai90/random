@@ -123,10 +123,10 @@ transform:scale(.95);
 }
 
 button:disabled {
-background: #555;
-box-shadow: none;
-cursor: not-allowed;
-transform: none;
+background: #555 !important;
+box-shadow: none !important;
+cursor: not-allowed !important;
+transform: none !important;
 }
 
 .result{
@@ -182,6 +182,24 @@ font-weight:bold;
 color:#00eaff;
 font-size:20px;
 font-weight:bold;
+}
+
+.reset-btn {
+background: transparent;
+border: 1px solid rgba(255,255,255,0.2);
+color: #aaa;
+font-size: 12px;
+padding: 6px 12px;
+margin-top: 15px;
+box-shadow: none;
+border-radius: 8px;
+width: auto;
+}
+
+.reset-btn:hover {
+background: rgba(255,255,255,0.1);
+color: #fff;
+transform: none;
 }
 
 /* KHU VỰC THÔNG TIN LIÊN HỆ */
@@ -278,7 +296,7 @@ Vương Hóng Hớt
 
 </div>
 
-<!-- HIỂN THỊ THỐNG KÊ LƯỢT RANDOM & SỐ ACC CÒN LẠI -->
+<!-- THỐNG KÊ LƯỢT RANDOM & SỐ ACC CÒN LẠI -->
 <div class="stats-container">
   <div>
     🎯 Đã random: <span id="count">0</span> lần
@@ -287,6 +305,8 @@ Vương Hóng Hớt
     📦 Còn lại: <span id="remaining">0</span> acc
   </div>
 </div>
+
+<button class="reset-btn" onclick="resetData()">🔄 Nạp lại kho 100 acc ban đầu</button>
 
 <!-- KHU VỰC LIÊN HỆ -->
 <div class="contact-section">
@@ -305,8 +325,8 @@ Vương Hóng Hớt
 
 <script>
 
-// Danh sách acc ban đầu
-let accounts = [
+// Danh sách acc gốc ban đầu
+const defaultAccounts = [
   {user:"lolilord0906", pass:"huq098765432"},
   {user:"viplstar", pass:"bao29081997"},
   {user:"saahawat", pass:"sstamp0814864059"},
@@ -409,47 +429,53 @@ let accounts = [
   {user:"ivoarmondes", pass:"012abc!@#"}
 ];
 
+// Nạp danh sách còn dở dang từ bộ nhớ trình duyệt (nếu có)
+let savedAccounts = localStorage.getItem("remainingAccounts");
+let accounts = savedAccounts ? JSON.parse(savedAccounts) : [...defaultAccounts];
+
 let currentAcc = "";
 let count = Number(localStorage.getItem("count")) || 0;
 
-// Cập nhật giao diện ban đầu
-document.getElementById("count").innerHTML = count;
-document.getElementById("remaining").innerHTML = accounts.length;
+// Hiển thị giao diện lúc khởi chạy
+updateUI();
 
 function randomAcc(){
-  // Kiểm tra nếu hết tài khoản
   if (accounts.length === 0) {
     alert("⚠️ Đã hết tài khoản trong hệ thống!");
-    let btn = document.getElementById("randomBtn");
-    btn.disabled = true;
-    btn.innerText = "❌ ĐÃ HẾT ACC";
     return;
   }
 
-  // 1. Lấy ngẫu nhiên vị trí trong mảng
+  // Lấy ngẫu nhiên 1 acc và rút khỏi danh sách
   let randomIndex = Math.floor(Math.random() * accounts.length);
-  
-  // 2. Rút tài khoản ra khỏi danh sách (xoá khỏi mảng để không trùng lặp nữa)
   let acc = accounts.splice(randomIndex, 1)[0];
 
-  // 3. Hiển thị thông tin acc
+  // Hiển thị kết quả
   document.getElementById("user").innerHTML = "👤 Tài khoản: " + acc.user;
   document.getElementById("pass").innerHTML = "🔑 Mật khẩu: " + (acc.pass ? acc.pass : "(Không có mật khẩu)");
   document.getElementById("result").style.display = "block";
 
   currentAcc = "Tài khoản: " + acc.user + "\nMật khẩu: " + acc.pass;
 
-  // 4. Cập nhật lượt random và số acc còn lại
+  // Cập nhật số lượt bấm và lưu mảng acc còn lại vào bộ nhớ trình duyệt
   count++;
   localStorage.setItem("count", count);
+  localStorage.setItem("remainingAccounts", JSON.stringify(accounts));
+
+  // Cập nhật lại giao diện ngay
+  updateUI();
+}
+
+function updateUI() {
   document.getElementById("count").innerHTML = count;
   document.getElementById("remaining").innerHTML = accounts.length;
 
-  // 5. Nếu vừa lấy acc cuối cùng, đổi trạng thái nút bấm
+  let btn = document.getElementById("randomBtn");
   if (accounts.length === 0) {
-    let btn = document.getElementById("randomBtn");
     btn.disabled = true;
     btn.innerText = "❌ ĐÃ HẾT ACC";
+  } else {
+    btn.disabled = false;
+    btn.innerText = "🎁 RANDOM ACC NGAY";
   }
 }
 
@@ -457,6 +483,16 @@ function copyAcc(){
   if (!currentAcc) return;
   navigator.clipboard.writeText(currentAcc);
   alert("✅ Đã copy acc");
+}
+
+function resetData() {
+  if (confirm("Bạn có muốn nạp lại kho 100 acc ban đầu không?")) {
+    accounts = [...defaultAccounts];
+    localStorage.setItem("remainingAccounts", JSON.stringify(accounts));
+    document.getElementById("result").style.display = "none";
+    updateUI();
+    alert("✅ Đã khôi phục lại kho acc!");
+  }
 }
 
 </script>
