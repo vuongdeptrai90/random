@@ -237,6 +237,10 @@ button:disabled {
 
 <body>
 
+<!-- Các tệp âm thanh hiệu ứng -->
+<audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
+<audio id="copySound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" preload="auto"></audio>
+
 <div class="box">
   <div class="logo">
     <img src="logo.jpg" alt="Logo" class="logo-img">
@@ -371,11 +375,24 @@ let count = Number(localStorage.getItem("count")) || 0;
 
 updateUI();
 
+// Hàm phát âm thanh trợ giúp
+function playSFX(audioId) {
+  let audio = document.getElementById(audioId);
+  if (audio) {
+    audio.currentTime = 0; // Đặt lại về đầu để phát ngay lập tức
+    audio.play().catch(e => console.log("Lỗi âm thanh:", e));
+  }
+}
+
 function randomAcc(){
   if (accounts.length === 0) {
     showToast("⚠️ Đã hết acc trong hệ thống!");
     return;
   }
+
+  // Phát âm thanh Random
+  playSFX('clickSound');
+
   let randomIndex = Math.floor(Math.random() * accounts.length);
   let acc = accounts.splice(randomIndex, 1)[0];
 
@@ -408,6 +425,10 @@ function updateUI() {
 function copyText(elementId, type) {
   let val = type === 'Tài khoản' ? currentRawAcc.user : currentRawAcc.pass;
   if (!val) return;
+
+  // Phát âm thanh Copy
+  playSFX('copySound');
+
   navigator.clipboard.writeText(val);
   showToast("✅ Đã copy " + type + "!");
 }
