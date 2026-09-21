@@ -1,4 +1,4 @@
--- ☠ VƯƠNG HÓNG HỚT HUB LITE — GAMING UI ☠  (v2.0)
+-- ☠ VƯƠNG HÓNG HỚT HUB — GAMING UI ☠  (v2.1)
 
 -- chạy lại script thì gỡ bản cũ trước, tránh bị chồng 2 hub
 if _G.VuongHubUnload then pcall(_G.VuongHubUnload) end
@@ -11,6 +11,7 @@ local GuiService = game:GetService("GuiService")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Stats = game:GetService("Stats")
+local Lighting = game:GetService("Lighting")
 local p = Players.LocalPlayer
 
 -- theo dõi mọi kết nối của hub để gỡ sạch khi Unload
@@ -35,7 +36,7 @@ local SAVE_FILE = "VuongHub_Settings.json"  -- file lưu cài đặt (nếu exec
 -- Thông tin của bạn: sửa lại cho đúng, muốn thêm mạng xã hội thì thêm 1 dòng
 local INFO = {
 	Author = "Vương Hóng Hớt",
-	Version = "v2.0",
+	Version = "v2.1",
 	Socials = {
 		{ Icon = "▶", Name = "YouTube", Link = "https://youtube.com/@vuongrobloxez?si=bJT3pi3V2K9jN-Jt" },
 	},
@@ -70,6 +71,8 @@ local DEFAULTS = {
 	jumpOn = false, jumpVal = 80,  -- tính theo JumpPower (mặc định game thường là 50)
 	noclip = false, infJump = false,
 	fly = false, flySpeed = 60,
+	-- Fix Lag: 1 = Nhẹ, 2 = Mạnh
+	lagOn = false, lagLevel = 1,
 }
 
 local CFG = {}
@@ -493,7 +496,7 @@ make("TextLabel", {
 	BackgroundTransparency = 1,
 	Position = UDim2.fromOffset(10, 21),
 	Size = UDim2.new(1, -100, 0, 12),
-	Text = "HUB LITE  •  GAMING EDITION",
+	Text = "HUB  •  GAMING EDITION",
 	Font = Enum.Font.GothamMedium,
 	TextSize = 9,
 	TextColor3 = THEME.Sub,
@@ -852,6 +855,119 @@ local function onCharacter(char)
 		char:WaitForChild("HumanoidRootPart", 10)
 		if alive and CFG.fly then flyStart() end
 	end
+end
+
+----------------------------------------------------------------
+-- TÍNH NĂNG: FIX LAG (giảm đồ họa để tăng FPS, hoàn tác được)
+----------------------------------------------------------------
+local LAG = {
+	Orig = setmetatable({}, { __mode = "k" }),  -- giá trị gốc của từng vật thể
+	OrigQuality = nil,
+	Conns = {},
+	Gen = 0,
+}
+
+-- đổi thuộc tính nhưng nhớ giá trị gốc (chỉ nhớ lần đầu) để khôi phục
+local function lagSet(inst, prop, value)
+	local rec = LAG.Orig[inst]
+	if not rec then
+		rec = {}
+		LAG.Orig[inst] = rec
+	end
+	if rec[prop] == nil then rec[prop] = inst[prop] end
+	inst[prop] = value
+end
+
+local function lagProcess(v, level)
+	-- mức 1: tắt hiệu ứng nặng (hạt, vệt, tia, lửa, khói, bloom/blur...)
+	if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam")
+		or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("PostEffect") then
+		lagSet(v, "Enabled", false)
+	elseif level >= 2 then
+		-- mức 2: đơn giản hoá vật liệu, bóng, hình dán (bỏ qua nhân vật cho khỏi xấu)
+		if v:IsA("BasePart") then
+			if not v:IsA("Terrain") and not (v.Parent and v.Parent:FindFirstChildOfClass("Humanoid")) then
+				lagSet(v, "Material", Enum.Material.SmoothPlastic)
+				lagSet(v, "CastShadow", false)
+				lagSet(v, "Reflectance", 0)
+			end
+		elseif v:IsA("Decal") then
+			local model = v.Parent and v.Parent.Parent
+			if not (model and model:FindFirstChildOfClass("Humanoid")) then
+				lagSet(v, "Transparency", 1)
+			end
+		end
+	end
+end
+
+function LAG.Restore()
+	LAG.Gen += 1  -- huỷ đợt quét đang chạy nền
+	for _, c in ipairs(LAG.Conns) do c:Disconnect() end
+	table.clear(LAG.Conns)
+
+	for inst, rec in pairs(LAG.Orig) do
+		if inst.Parent then
+			for prop, val in pairs(rec) do
+				pcall(function() inst[prop] = val end)
+			end
+		end
+	end
+	table.clear(LAG.Orig)
+
+	if LAG.OrigQuality ~= nil then
+		pcall(function() settings().Rendering.QualityLevel = LAG.OrigQuality end)
+		LAG.OrigQuality = nil
+	end
+end
+
+function LAG.Apply()
+	LAG.Restore()  -- luôn bắt đầu từ trạng thái gốc (đổi mức không bị chồng)
+	local gen = LAG.Gen
+	local level = CFG.lagLevel
+
+	-- đồ họa chung
+	pcall(function()
+		LAG.OrigQuality = settings().Rendering.QualityLevel
+		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+	end)
+	pcall(lagSet, Lighting, "GlobalShadows", false)
+	if level >= 2 then pcall(lagSet, Lighting, "EnvironmentSpecularScale", 0) end
+
+	local terrain = workspace:FindFirstChildOfClass("Terrain")
+	if terrain then
+		pcall(lagSet, terrain, "WaterWaveSize", 0)
+		pcall(lagSet, terrain, "WaterWaveSpeed", 0)
+		pcall(lagSet, terrain, "WaterReflectance", 0)
+		pcall(lagSet, terrain, "Decoration", false)
+	end
+
+	-- vật thể mới xuất hiện sau đó
+	local function onAdded(v)
+		if LAG.Gen == gen then pcall(lagProcess, v, level) end
+	end
+	table.insert(LAG.Conns, workspace.DescendantAdded:Connect(onAdded))
+	table.insert(LAG.Conns, Lighting.DescendantAdded:Connect(onAdded))
+
+	-- quét nền, chia nhỏ từng đợt để không bị đứng hình
+	task.spawn(function()
+		local n = 0
+		local function scan(list)
+			for _, v in ipairs(list) do
+				if LAG.Gen ~= gen then return false end
+				pcall(lagProcess, v, level)
+				n += 1
+				if n % 1500 == 0 then task.wait() end
+			end
+			return true
+		end
+		if not scan(Lighting:GetDescendants()) then return end
+		local cam = workspace.CurrentCamera
+		if cam and not scan(cam:GetDescendants()) then return end
+		if not scan(workspace:GetDescendants()) then return end
+		if alive and not booting then
+			setStatus("Fix Lag xong • đã xử lý " .. n .. " vật thể")
+		end
+	end)
 end
 
 ----------------------------------------------------------------
@@ -1395,6 +1511,25 @@ row(pInfo, "Hub", INFO.Author .. " • " .. INFO.Version)
 ----------------------------------------------------------------
 local pSet = addTab(4, "SET", "⚙ SET")
 
+section(pSet, "TỐI ƯU HIỆU NĂNG")
+addToggle(pSet, "🚀", "Fix Lag (tăng FPS)", "lagOn", function(on)
+	if on then
+		LAG.Apply()
+		say("Fix Lag ON • đang xử lý nền...")
+	else
+		LAG.Restore()
+		say("Fix Lag OFF • đã khôi phục")
+	end
+end)
+addStepper(pSet, "Mức giảm đồ họa", "lagLevel", 1, 2, 1, function(v)
+	return v == 1 and "Nhẹ" or "Mạnh"
+end, function()
+	if booting or not CFG.lagOn then return end
+	LAG.Apply()
+	say("Fix Lag: đổi mức, đang xử lý nền...")
+end)
+note(pSet, "Nhẹ: tắt hiệu ứng, bóng, làm mượt nước. Mạnh: thêm vật liệu phẳng, bỏ hình dán (game trông đơn giản hơn). Chỉ giúp lag FPS, không giúp lag mạng (ping).")
+
 section(pSet, "CÀI ĐẶT")
 row(pSet, "Lưu cài đặt", canSave and "Tự động" or "Không hỗ trợ")
 row(pSet, "Phím tắt", TOGGLE_KEY.Name)
@@ -1469,6 +1604,7 @@ local function unload()
 	NC.Set(false)
 	IJ.Set(false)
 	flyStop(true)
+	LAG.Restore()
 	ESP.Gen += 1
 	clearAll()
 	stopFps()
