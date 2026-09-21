@@ -18,7 +18,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<title>Vương Hóng Hớt - Random Acc & Flappy Bird</title>
+<title>Vương Hóng Hớt - Random Acc & Flappy Vương</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -184,7 +184,7 @@ transform: none;
   font-weight: 600;
 }
 
-/* KHU VỰC FLAPPY BIRD */
+/* KHU VỰC GAME FLAPPY VƯƠNG */
 .game-container {
   position: relative;
   width: 100%;
@@ -195,7 +195,7 @@ transform: none;
   overflow: hidden;
   border: 2px solid #00eaff;
   box-shadow: 0 0 15px rgba(0,234,255,0.3);
-  background: #70c5ce;
+  background: #2c3e50;
 }
 
 canvas {
@@ -320,16 +320,16 @@ canvas {
 
 <button class="reset-btn" onclick="resetData()">🔄 Nạp lại kho acc ban đầu</button>
 
-<!-- DÒNG PHÂN CÁCH PHẦN GAME -->
+<!-- DÒNG PHÂN CÁCH PHẦN GAME FLAPPY VƯƠNG -->
 <div class="divider">
-  <span class="divider-text">🐤 MINI GAME FLAPPY BIRD 🐤</span>
+  <span class="divider-text">🍄 MINI GAME FLAPPY VƯƠNG 🍄</span>
 </div>
 
-<!-- KHU VỰC GAME FLAPPY BIRD -->
+<!-- KHU VỰC GAME FLAPPY VƯƠNG -->
 <div class="game-container">
   <canvas id="birdGame" width="320" height="320"></canvas>
 </div>
-<button style="background: linear-gradient(45deg,#ff9900,#ff5500);" onclick="resetFlappy()">🎮 CHƠI LẠI FLAPPY BIRD</button>
+<button style="background: linear-gradient(45deg,#ff9900,#ff5500);" onclick="resetFlappy()">🎮 CHƠI LẠI FLAPPY VƯƠNG</button>
 
 <div class="donate-section">
   <div class="donate-title">💖 Ủng Hộ / Donate Cho Kênh</div>
@@ -488,11 +488,18 @@ function resetData() {
 }
 
 
-/* ==================== PHẦN 2: GAME FLAPPY BIRD ==================== */
+/* ==================== PHẦN 2: GAME FLAPPY VƯƠNG (MÈO NẤM) ==================== */
 const canvas = document.getElementById("birdGame");
 const ctx = canvas.getContext("2d");
 
-let bird = { x: 40, y: 120, radius: 10, velocity: 0, gravity: 0.25, jump: -4.5 };
+let bird = { 
+  x: 50, 
+  y: 120, 
+  radius: 14, 
+  velocity: 0, 
+  gravity: 0.25, 
+  jump: -4.5 
+};
 let pipes = [];
 let score = 0;
 let highScore = localStorage.getItem("flappyHighScore") || 0;
@@ -528,8 +535,9 @@ function updateFlappy() {
   }
 
   frameCount++;
+
   if (frameCount % 85 === 0) {
-    let gap = 95;
+    let gap = 100;
     let minPipe = 30;
     let topHeight = Math.floor(Math.random() * (canvas.height - gap - minPipe * 2)) + minPipe;
     pipes.push({
@@ -565,25 +573,136 @@ function updateFlappy() {
   pipes = pipes.filter(p => p.x > -35);
 }
 
-function drawFlappy() {
-  ctx.fillStyle = "#70c5ce";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+// HÀM VẼ NHÂN VẬT MÈO NẤM VƯƠNG HÓNG HỚT
+function drawMushroomCat(x, y, velocity) {
+  ctx.save();
+  ctx.translate(x, y);
 
-  ctx.fillStyle = "#2ed573";
-  ctx.strokeStyle = "#000";
-  pipes.forEach(p => {
-    ctx.fillRect(p.x, 0, 35, p.top);
-    ctx.strokeRect(p.x, 0, 35, p.top);
-    ctx.fillRect(p.x, canvas.height - p.bottom, 35, p.bottom);
-    ctx.strokeRect(p.x, canvas.height - p.bottom, 35, p.bottom);
-  });
+  // Độ nghiêng khi nhảy
+  let angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, velocity * 0.1));
+  ctx.rotate(angle);
 
-  ctx.fillStyle = "#ffa502";
+  // 1. TAI MÈO (Thò ra dưới nắp nấm)
+  ctx.fillStyle = "#fff";
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 1.5;
+
+  // Tai trái
   ctx.beginPath();
-  ctx.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+  ctx.moveTo(-10, -5);
+  ctx.lineTo(-14, -15);
+  ctx.lineTo(-4, -10);
   ctx.fill();
   ctx.stroke();
 
+  // Tai phải
+  ctx.beginPath();
+  ctx.moveTo(4, -10);
+  ctx.lineTo(14, -15);
+  ctx.lineTo(10, -5);
+  ctx.fill();
+  ctx.stroke();
+
+  // Lòng tai hồng
+  ctx.fillStyle = "#ffb6c1";
+  ctx.beginPath();
+  ctx.moveTo(-9, -6);
+  ctx.lineTo(-12, -13);
+  ctx.lineTo(-5, -9);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(5, -9);
+  ctx.lineTo(12, -13);
+  ctx.lineTo(9, -6);
+  ctx.fill();
+
+  // 2. MŨ NẤM ĐỎ CUTE
+  ctx.fillStyle = "#ff4757";
+  ctx.strokeStyle = "#222";
+  ctx.beginPath();
+  ctx.arc(0, -6, 15, Math.PI, 0, false);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Chấm tròn trắng trên mũ nấm
+  ctx.fillStyle = "#ffffff";
+  ctx.beginPath(); ctx.arc(-7, -13, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, -16, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(7, -12, 2.5, 0, Math.PI * 2); ctx.fill();
+
+  // 3. KHUÔN MẶT MÈO MÀU TRẮNG TRÒN
+  ctx.fillStyle = "#ffffff";
+  ctx.strokeStyle = "#222";
+  ctx.beginPath();
+  ctx.arc(0, 4, 12, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+
+  // 4. MẮT MÈO TO TRÒN
+  ctx.fillStyle = "#222";
+  ctx.beginPath(); ctx.arc(-5, 2, 2.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(5, 2, 2.2, 0, Math.PI * 2); ctx.fill();
+
+  // Điểm sáng trong mắt
+  ctx.fillStyle = "#fff";
+  ctx.beginPath(); ctx.arc(-5.5, 1.2, 0.8, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4.5, 1.2, 0.8, 0, Math.PI * 2); ctx.fill();
+
+  // 5. MÁ HỒNG CUTE
+  ctx.fillStyle = "rgba(255, 105, 180, 0.6)";
+  ctx.beginPath(); ctx.arc(-8, 5, 2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(8, 5, 2, 0, Math.PI * 2); ctx.fill();
+
+  // 6. MŨI VÀ MIỆNG MÈO (Chữ :3)
+  ctx.strokeStyle = "#222";
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.arc(-2, 6, 1.8, 0, Math.PI, false);
+  ctx.arc(2, 6, 1.8, 0, Math.PI, false);
+  ctx.stroke();
+
+  // 7. RÂU MÈO HAI BÊN
+  ctx.beginPath();
+  // Râu trái
+  ctx.moveTo(-11, 4); ctx.lineTo(-16, 2);
+  ctx.moveTo(-11, 6); ctx.lineTo(-16, 7);
+  // Râu phải
+  ctx.moveTo(11, 4); ctx.lineTo(16, 2);
+  ctx.moveTo(11, 6); ctx.lineTo(16, 7);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawFlappy() {
+  // Nền trời
+  ctx.fillStyle = "#70a1ff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Vẽ Ống
+  ctx.fillStyle = "#2ed573";
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  pipes.forEach(p => {
+    // Ống trên
+    ctx.fillRect(p.x, 0, 35, p.top);
+    ctx.strokeRect(p.x, 0, 35, p.top);
+    ctx.fillRect(p.x - 3, p.top - 12, 41, 12);
+    ctx.strokeRect(p.x - 3, p.top - 12, 41, 12);
+
+    // Ống dưới
+    ctx.fillRect(p.x, canvas.height - p.bottom, 35, p.bottom);
+    ctx.strokeRect(p.x, canvas.height - p.bottom, 35, p.bottom);
+    ctx.fillRect(p.x - 3, canvas.height - p.bottom, 41, 12);
+    ctx.strokeRect(p.x - 3, canvas.height - p.bottom, 41, 12);
+  });
+
+  // Vẽ Nhân Vật Mèo Nấm
+  drawMushroomCat(bird.x, bird.y, bird.velocity);
+
+  // Hiển thị Điểm
   ctx.fillStyle = "#fff";
   ctx.font = "bold 15px Poppins";
   ctx.shadowColor = "#000";
@@ -592,6 +711,7 @@ function drawFlappy() {
   ctx.fillText("Kỷ lục: " + highScore, 10, 45);
   ctx.shadowBlur = 0;
 
+  // Màn hình Game Over
   if (gameOver) {
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
