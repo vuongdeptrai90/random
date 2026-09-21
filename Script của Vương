@@ -1,4 +1,4 @@
--- ☠ VƯƠNG HÓNG HỚT HUB — GAMING UI ☠  (v2.2)
+-- ☠ VƯƠNG HÓNG HỚT HUB — GAMING UI ☠  (v2.3)
 
 -- chạy lại script thì gỡ bản cũ trước, tránh bị chồng 2 hub
 if _G.VuongHubUnload then pcall(_G.VuongHubUnload) end
@@ -36,7 +36,7 @@ local SAVE_FILE = "VuongHub_Settings.json"  -- file lưu cài đặt (nếu exec
 -- Thông tin của bạn: sửa lại cho đúng, muốn thêm mạng xã hội thì thêm 1 dòng
 local INFO = {
 	Author = "Vương Hóng Hớt",
-	Version = "v2.2",
+	Version = "v2.3",
 	Socials = {
 		{ Icon = "▶", Name = "YouTube", Link = "https://youtube.com/@vuongrobloxez?si=bJT3pi3V2K9jN-Jt" },
 	},
@@ -460,6 +460,80 @@ local function itemName(inst, kind)
 	return inst.Name
 end
 
+-- Tìm "giá trị" của vật phẩm: game nào cũng lưu khác nhau nên thử nhiều chỗ
+-- (Attribute, NumberValue/IntValue/StringValue con, ActionText của prompt)
+local VALUE_KEYS = {
+	"value", "price", "cost", "worth", "sell", "amount",
+	"rarity", "tier", "level", "coin", "money", "cash", "gold", "gem",
+}
+
+local function fmtVal(v)
+	if type(v) == "number" then
+		if v >= 1e9 then return string.format("%.1fB", v / 1e9) end
+		if v >= 1e6 then return string.format("%.1fM", v / 1e6) end
+		if v >= 1e4 then return string.format("%.1fK", v / 1e3) end
+		return tostring(math.floor(v * 100 + 0.5) / 100)
+	end
+	return tostring(v)
+end
+
+local function matchKey(name)
+	local ln = name:lower()
+	for _, k in ipairs(VALUE_KEYS) do
+		if ln:find(k, 1, true) then return true end
+	end
+	return false
+end
+
+local function findValue(root)
+	-- 1) Attribute có tên giống giá trị
+	for name, v in pairs(root:GetAttributes()) do
+		if (type(v) == "number" or type(v) == "string") and matchKey(name) then
+			return name, v
+		end
+	end
+	-- 2) Value con có tên giống giá trị
+	local fallbackName, fallbackVal
+	for _, c in ipairs(root:GetChildren()) do
+		if c:IsA("NumberValue") or c:IsA("IntValue") or c:IsA("StringValue") then
+			if matchKey(c.Name) then return c.Name, c.Value end
+			if not fallbackName and not c:IsA("StringValue") then
+				fallbackName, fallbackVal = c.Name, c.Value
+			end
+		end
+	end
+	-- 3) không khớp tên thì lấy Value số đầu tiên
+	return fallbackName, fallbackVal
+end
+
+local function itemValueText(data)
+	local inst = data.Inst
+	local roots = { inst }
+	if data.Kind == "Tool" then
+		local h = inst:FindFirstChild("Handle")
+		if h then roots[#roots + 1] = h end
+	else
+		local par = inst.Parent
+		if par then roots[#roots + 1] = par end
+		local m = inst:FindFirstAncestorWhichIsA("Model")
+		if m and m ~= par then roots[#roots + 1] = m end
+	end
+
+	for _, r in ipairs(roots) do
+		local name, v = findValue(r)
+		if name ~= nil then return name .. ": " .. fmtVal(v) end
+	end
+
+	-- nhiều game ghi giá trong ActionText của prompt (vd "Buy $100")
+	if data.Kind == "Prompt" then
+		local a = inst.ActionText
+		if a ~= "" and a:lower() ~= "interact" then return a end
+	elseif inst.ToolTip ~= "" then
+		return inst.ToolTip
+	end
+	return nil
+end
+
 -- Tool đang được cầm (nằm trong nhân vật) thì không tính là đồ rơi
 local function itemValid(data)
 	local inst = data.Inst
@@ -498,7 +572,7 @@ local function addItem(inst)
 		Adornee = part,
 		AlwaysOnTop = true,
 		Enabled = false,
-		Size = UDim2.fromOffset(140, 20),
+		Size = UDim2.fromOffset(220, 20),
 		StudsOffset = Vector3.new(0, 1.5, 0),
 	}, espFolder)
 	local lbl = make("TextLabel", {
@@ -601,7 +675,14 @@ local function startItems()
 			else
 				setItemShown(data, true)
 				local d = math.floor(data.Dist / 5 + 0.5) * 5
-				local txt = string.format("%s | %dm", itemName(data.Inst, data.Kind), d)
+				local nm = itemName(data.Inst, data.Kind)
+				local val = itemValueText(data)
+				local txt
+				if val then
+					txt = string.format("%s [%s] | %dm", nm, val, d)
+				else
+					txt = string.format("%s | %dm", nm, d)
+				end
 				if data.Label.Text ~= txt then data.Label.Text = txt end
 			end
 		end
