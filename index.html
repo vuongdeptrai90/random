@@ -23,7 +23,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-
 *{
 box-sizing:border-box;
 font-family:'Poppins',sans-serif;
@@ -37,107 +36,65 @@ justify-content:center;
 align-items:center;
 overflow-x:hidden;
 color:white;
-background:
-radial-gradient(circle at top,#00eaff55,transparent 40%),
-linear-gradient(135deg,#030303,#151515,#222);
+background: linear-gradient(135deg,#030303,#151515,#222);
 padding:20px 0;
-}
-
-/* nền chuyển động */
-body:before{
-content:"";
-position:absolute;
-width:500px;
-height:500px;
-background:#00eaff;
-filter:blur(180px);
-opacity:.3;
-animation:bgmove 8s infinite alternate;
-}
-
-@keyframes bgmove{
-from{
-transform:translate(-200px,-100px);
-}
-to{
-transform:translate(200px,100px);
-}
 }
 
 .box{
 width:95%;
 max-width:430px;
-padding:30px;
-background:rgba(255,255,255,.08);
-backdrop-filter:blur(15px);
-border-radius:25px;
-border:1px solid rgba(255,255,255,.2);
-box-shadow:0 0 40px #00eaff55;
+padding:25px;
+background:rgba(255,255,255,0.05);
+border-radius:20px;
+border:1px solid rgba(255,255,255,0.15);
+box-shadow:0 0 25px rgba(0,234,255,0.2);
 text-align:center;
-animation:show .7s;
 position:relative;
 z-index:1;
 }
 
-@keyframes show{
-from{
-opacity:0;
-transform:translateY(50px);
-}
-to{
-opacity:1;
-transform:none;
-}
-}
-
 .logo-img {
-width: 100px;
-height: 100px;
+width: 90px;
+height: 90px;
 border-radius: 50%;
 object-fit: cover;
 border: 3px solid #00eaff;
-box-shadow: 0 0 20px #00eaff;
-animation: float 2s infinite;
-}
-
-@keyframes float{
-50%{
-transform:translateY(-10px);
-}
+box-shadow: 0 0 15px #00eaff;
 }
 
 h1{
 margin:10px 0 5px 0;
-font-size:30px;
+font-size:26px;
 color:#00eaff;
-text-shadow:0 0 20px #00eaff;
+text-shadow:0 0 10px #00eaff;
 }
 
 p{
 color:#ddd;
+font-size: 14px;
 }
 
 button{
 width:100%;
-padding:15px;
-margin-top:15px;
+padding:14px;
+margin-top:12px;
 border:none;
-border-radius:15px;
-font-size:16px;
+border-radius:12px;
+font-size:15px;
 background:linear-gradient(45deg,#00eaff,#008cff);
 font-weight:bold;
 cursor:pointer;
-box-shadow:0 0 20px #00eaff;
-transition:.3s;
+box-shadow:0 0 15px rgba(0,234,255,0.4);
+transition: transform 0.2s;
 color: white;
 }
 
 button:hover{
-transform:scale(1.05);
+transform:scale(1.02);
 }
 
 button:active{
-transform:scale(.95);
+transform:scale(0.98);
 }
 
 button:disabled {
@@ -149,36 +106,25 @@ transform: none !important;
 
 .result{
 display:none;
-margin-top:20px;
-padding:20px;
-border-radius:20px;
-background:rgba(0,0,0,.45);
+margin-top:15px;
+padding:15px;
+border-radius:15px;
+background:rgba(0,0,0,0.5);
 border:1px solid #00eaff;
-animation:popup .5s;
-}
-
-@keyframes popup{
-from{
-opacity:0;
-transform:scale(.7);
-}
-to{
-opacity:1;
-transform:scale(1);
-}
 }
 
 .result p{
 background:#111;
 padding:10px;
-border-radius:10px;
+border-radius:8px;
 color:white;
 word-break: break-all;
+margin: 8px 0;
 }
 
 .copy{
 background:linear-gradient(45deg,#00ff88,#00cc55);
-box-shadow:0 0 20px #00ff88;
+box-shadow:0 0 15px rgba(0,255,136,0.4);
 }
 
 .stats-container {
@@ -187,18 +133,17 @@ display: flex;
 justify-content: space-around;
 background: rgba(0,0,0,0.3);
 padding: 10px;
-border-radius: 12px;
+border-radius: 10px;
+font-size: 14px;
 }
 
 #count {
 color:#00ff88;
-font-size:20px;
 font-weight:bold;
 }
 
 #remaining {
 color:#00eaff;
-font-size:20px;
 font-weight:bold;
 }
 
@@ -208,9 +153,8 @@ border: 1px solid rgba(255,255,255,0.2);
 color: #aaa;
 font-size: 12px;
 padding: 6px 12px;
-margin-top: 15px;
+margin-top: 12px;
 box-shadow: none;
-border-radius: 8px;
 width: auto;
 }
 
@@ -220,51 +164,43 @@ color: #fff;
 transform: none;
 }
 
-/* KHU VỰC DONATE QR */
 .donate-section {
-  margin-top: 25px;
-  padding: 15px;
-  background: rgba(0, 234, 255, 0.05);
-  border-radius: 18px;
-  border: 1px solid rgba(0, 234, 255, 0.2);
+  margin-top: 20px;
+  padding: 12px;
+  background: rgba(0, 234, 255, 0.03);
+  border-radius: 15px;
+  border: 1px solid rgba(0, 234, 255, 0.15);
 }
 
 .donate-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: #00ff88;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 
 .donate-desc {
-  font-size: 12px;
+  font-size: 11px;
   color: #ccc;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .qr-img {
-  width: 180px;
-  border-radius: 15px;
+  width: 150px;
+  border-radius: 10px;
   border: 2px solid #00eaff;
-  box-shadow: 0 0 20px rgba(0, 234, 255, 0.3);
-  transition: transform 0.3s;
 }
 
-.qr-img:hover {
-  transform: scale(1.05);
-}
-
-/* KHU VỰC THÔNG TIN LIÊN HỆ */
 .contact-section {
-  margin-top: 20px;
-  padding-top: 15px;
+  margin-top: 15px;
+  padding-top: 12px;
   border-top: 1px dashed rgba(255, 255, 255, 0.2);
 }
 
 .contact-title {
-  font-size: 14px;
+  font-size: 13px;
   color: #aaa;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -272,26 +208,25 @@ transform: none;
 .social-links {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .social-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 10px 15px;
-  border-radius: 12px;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
   text-decoration: none;
   font-weight: 600;
-  font-size: 14px;
-  transition: transform 0.3s, box-shadow 0.3s;
+  font-size: 13px;
+  transition: transform 0.2s;
 }
 
 .social-btn.youtube {
   background: linear-gradient(45deg, #ff0000, #cc0000);
   color: white;
-  box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
 }
 
 .social-btn.gmail {
@@ -301,74 +236,44 @@ transform: none;
 }
 
 .social-btn:hover {
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
-
-.social-btn.youtube:hover {
-  box-shadow: 0 0 25px rgba(255, 0, 0, 0.7);
-}
-
-.social-btn.gmail:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: #00eaff;
-}
-
 </style>
-
 </head>
 
 <body>
 
 <div class="box">
-
-<!-- LOGO ĐẠI DIỆN -->
 <div class="logo">
-  <img src="logo.jpg" alt="Vương Hóng Hớt Logo" class="logo-img">
+  <img src="logo.jpg" alt="Logo" class="logo-img">
 </div>
 
-<h1>
-Vương Hóng Hớt
-</h1>
-
-<p>
-🔥 Random Acc Liên Quân Miễn Phí 🔥
-</p>
+<h1>Vương Hóng Hớt</h1>
+<p>🔥 Random Acc Liên Quân Miễn Phí 🔥</p>
 
 <button id="randomBtn" onclick="randomAcc()">
 🎁 RANDOM ACC NGAY
 </button>
 
 <div class="result" id="result">
-
 <p id="user"></p>
 <p id="pass"></p>
-
-<button class="copy" onclick="copyAcc()">
-📋 COPY ACC
-</button>
-
+<button class="copy" onclick="copyAcc()">📋 COPY ACC</button>
 </div>
 
-<!-- THỐNG KÊ LƯỢT RANDOM & SỐ ACC CÒN LẠI -->
 <div class="stats-container">
-  <div>
-    🎯 Đã random: <span id="count">0</span> lần
-  </div>
-  <div>
-    📦 Còn lại: <span id="remaining">0</span> acc
-  </div>
+  <div>🎯 Đã random: <span id="count">0</span> lần</div>
+  <div>📦 Còn lại: <span id="remaining">0</span> acc</div>
 </div>
 
 <button class="reset-btn" onclick="resetData()">🔄 Nạp lại kho acc ban đầu</button>
 
-<!-- KHU VỰC DONATE ZALOPAY -->
 <div class="donate-section">
   <div class="donate-title">💖 Ủng Hộ / Donate Cho Kênh</div>
-  <div class="donate-desc">Quét mã QR để ủng hộ admin có kinh phí nhập thêm acc nhé!</div>
-  <img src="qrme.jpg" alt="Mã QR Donate ZaloPay" class="qr-img">
+  <div class="donate-desc">Quét mã QR để ủng hộ admin nhé!</div>
+  <img src="qrme.jpg" alt="QR ZaloPay" class="qr-img">
 </div>
 
-<!-- KHU VỰC LIÊN HỆ -->
 <div class="contact-section">
   <div class="contact-title">📌 Kênh Liên Hệ & Hỗ Trợ</div>
   <div class="social-links">
@@ -380,27 +285,10 @@ Vương Hóng Hớt
     </a>
   </div>
 </div>
-
 </div>
 
 <script>
-
-// Danh sách acc gốc ban đầu đã chuẩn hóa hoàn chỉnh
 const defaultAccounts = [
-  {user:"phieulv5555", pass:"khang110"},
-  {user:"reaogamer", pass:"rizqidn19"},
-  {user:"nghiempro123z", pass:"0813751686a"},
-  {user:"banamaka", pass:"hoilamgi12"},
-  {user:"nisachon744@gmail.com", pass:"13461nisachon"},
-  {user:"phucnhie", pass:"123456789p"},
-  {user:"maxlink269", pass:"@1050641"},
-  {user:"KhangNoobOks", pass:"0987010190Khang@"},
-  {user:"gianghuongxkhoi", pass:"khoi20212008"},
-  {user:"letrananhvu1705", pass:"Trong2k13bg@"},
-  {user:"trung_sproter", pass:"fifaonline3"},
-  {user:"tuananh2_v1", pass:"1231234567AsFg"},
-  {user:"lockcreen", pass:"windows81"},
-  {user:"vyvyvinh123", pass:"taoditu113"},
   {user:"songoku123abc", pass:"rapber123"},
   {user:"lutrieuky1996", pass:"lulan258"},
   {user:"sayush1234", pass:"sayush12345"},
@@ -473,14 +361,11 @@ const defaultAccounts = [
   {user:"khnhtrn214", pass:"khanh323k"}
 ];
 
-// Nạp danh sách còn dở dang từ bộ nhớ trình duyệt (nếu có)
 let savedAccounts = localStorage.getItem("remainingAccounts");
 let accounts = savedAccounts ? JSON.parse(savedAccounts) : [...defaultAccounts];
-
 let currentAcc = "";
 let count = Number(localStorage.getItem("count")) || 0;
 
-// Hiển thị giao diện lúc khởi chạy
 updateUI();
 
 function randomAcc(){
@@ -488,24 +373,18 @@ function randomAcc(){
     alert("⚠️ Đã hết tài khoản trong hệ thống!");
     return;
   }
-
-  // Lấy ngẫu nhiên 1 acc và rút khỏi danh sách
   let randomIndex = Math.floor(Math.random() * accounts.length);
   let acc = accounts.splice(randomIndex, 1)[0];
 
-  // Hiển thị kết quả
   document.getElementById("user").innerHTML = "👤 Tài khoản: " + acc.user;
-  document.getElementById("pass").innerHTML = "🔑 Mật khẩu: " + (acc.pass ? acc.pass : "(Không có mật khẩu)");
+  document.getElementById("pass").innerHTML = "🔑 Mật khẩu: " + acc.pass;
   document.getElementById("result").style.display = "block";
 
   currentAcc = "Tài khoản: " + acc.user + "\nMật khẩu: " + acc.pass;
-
-  // Cập nhật số lượt bấm và lưu mảng acc còn lại vào bộ nhớ trình duyệt
   count++;
+  
   localStorage.setItem("count", count);
   localStorage.setItem("remainingAccounts", JSON.stringify(accounts));
-
-  // Cập nhật lại giao diện ngay
   updateUI();
 }
 
@@ -538,7 +417,6 @@ function resetData() {
     alert("✅ Đã khôi phục lại kho acc!");
   }
 }
-
 </script>
 
 </body>
