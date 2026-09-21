@@ -538,14 +538,17 @@ let savedAccounts = localStorage.getItem("remainingAccounts");
 let accounts = savedAccounts ? JSON.parse(savedAccounts) : [...defaultAccounts];
 let currentAcc = "";
 let count = Number(localStorage.getItem("count")) || 0;
+let isCooldown = false;
 
 updateUI();
 
 function randomAcc(){
+  if (isCooldown) return;
   if (accounts.length === 0) {
     showToast("⚠️ Đã hết tài khoản trong hệ thống!");
     return;
   }
+  
   let randomIndex = Math.floor(Math.random() * accounts.length);
   let acc = accounts.splice(randomIndex, 1)[0];
 
@@ -559,6 +562,24 @@ function randomAcc(){
   localStorage.setItem("count", count);
   localStorage.setItem("remainingAccounts", JSON.stringify(accounts));
   updateUI();
+
+  // Bắt đầu thời gian chờ 10 giây
+  isCooldown = true;
+  let timeLeft = 10;
+  let btn = document.getElementById("randomBtn");
+  btn.disabled = true;
+  btn.innerText = `⏳ Vui lòng đợi (${timeLeft}s)`;
+
+  let timer = setInterval(function() {
+    timeLeft--;
+    if (timeLeft > 0) {
+      btn.innerText = `⏳ Vui lòng đợi (${timeLeft}s)`;
+    } else {
+      clearInterval(timer);
+      isCooldown = false;
+      updateUI();
+    }
+  }, 1000);
 }
 
 function updateUI() {
@@ -566,12 +587,14 @@ function updateUI() {
   document.getElementById("remaining").innerHTML = accounts.length;
 
   let btn = document.getElementById("randomBtn");
-  if (accounts.length === 0) {
-    btn.disabled = true;
-    btn.innerText = "❌ ĐÃ HẾT ACC";
-  } else {
-    btn.disabled = false; 
-    btn.innerText = "🎁 RANDOM ACC NGAY";
+  if (!isCooldown) {
+    if (accounts.length === 0) {
+      btn.disabled = true;
+      btn.innerText = "❌ ĐÃ HẾT ACC";
+    } else {
+      btn.disabled = false; 
+      btn.innerText = "🎁 RANDOM ACC NGAY";
+    }
   }
 }
 
@@ -586,6 +609,7 @@ function resetData() {
     accounts = [...defaultAccounts];
     localStorage.setItem("remainingAccounts", JSON.stringify(accounts));
     document.getElementById("result").style.display = "none";
+    isCooldown = false;
     updateUI();
     showToast("✅ Đã khôi phục lại kho acc!");
   }
