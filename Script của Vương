@@ -1,10 +1,26 @@
--- ☠ VƯƠNG HÓNG HỚT HUB LITE — GAMING UI ☠
+-- ☠ VƯƠNG HÓNG HỚT HUB LITE — GAMING UI ☠  (v2.0)
+
+-- chạy lại script thì gỡ bản cũ trước, tránh bị chồng 2 hub
+if _G.VuongHubUnload then pcall(_G.VuongHubUnload) end
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-local Camera = workspace.CurrentCamera
+local UIS = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local Stats = game:GetService("Stats")
 local p = Players.LocalPlayer
+
+-- theo dõi mọi kết nối của hub để gỡ sạch khi Unload
+local conns = {}
+local alive = true
+local booting = true  -- true trong lúc khởi động: không hiện thông báo trạng thái
+local function track(c)
+	conns[#conns + 1] = c
+	return c
+end
 
 ----------------------------------------------------------------
 -- CẤU HÌNH GIAO DIỆN
@@ -13,11 +29,13 @@ local p = Players.LocalPlayer
 local ANIMATIONS = false
 
 local LOGO_ID = ""  -- ID ảnh mèo chuối (Decal). Để trống thì dùng emoji 🍌
+local TOGGLE_KEY = Enum.KeyCode.RightShift  -- phím bật/tắt hub trên PC
+local SAVE_FILE = "VuongHub_Settings.json"  -- file lưu cài đặt (nếu executor hỗ trợ)
 
 -- Thông tin của bạn: sửa lại cho đúng, muốn thêm mạng xã hội thì thêm 1 dòng
 local INFO = {
 	Author = "Vương Hóng Hớt",
-	Version = "v1.0",
+	Version = "v2.0",
 	Socials = {
 		{ Icon = "▶", Name = "YouTube", Link = "https://youtube.com/@vuongrobloxez?si=bJT3pi3V2K9jN-Jt" },
 	},
@@ -36,9 +54,68 @@ local THEME = {
 	Danger  = Color3.fromRGB(230, 60, 75),
 }
 
-local W, H_FULL, H_MIN, H_INFO = 252, 136, 36, 270
-local currentH = H_FULL
+local W, H_FULL, H_MIN = 252, 270, 36
 
+----------------------------------------------------------------
+-- CÀI ĐẶT + LƯU / TẢI
+----------------------------------------------------------------
+local DEFAULTS = {
+	zoom = 1,
+	-- ESP
+	espNPC = false, espPlayer = false, teamCheck = false,
+	espDist = 600,   -- xa hơn thì ẩn
+	espMax = 20,     -- chỉ vẽ tối đa N mục tiêu gần nhất (Roblox giới hạn ~31 Highlight)
+	-- Di chuyển
+	speedOn = false, speedVal = 32,
+	jumpOn = false, jumpVal = 80,  -- tính theo JumpPower (mặc định game thường là 50)
+	noclip = false, infJump = false,
+	fly = false, flySpeed = 60,
+}
+
+local CFG = {}
+for k, v in pairs(DEFAULTS) do CFG[k] = v end
+
+local canSave = type(writefile) == "function"
+	and type(readfile) == "function"
+	and type(isfile) == "function"
+
+local function loadSettings()
+	if not canSave then return end
+	local ok, data = pcall(function()
+		if isfile(SAVE_FILE) then
+			return HttpService:JSONDecode(readfile(SAVE_FILE))
+		end
+	end)
+	if ok and type(data) == "table" then
+		for k, def in pairs(DEFAULTS) do
+			if type(data[k]) == type(def) then CFG[k] = data[k] end
+		end
+	end
+end
+
+local function writeNow()
+	if not canSave then return false end
+	return (pcall(function()
+		writefile(SAVE_FILE, HttpService:JSONEncode(CFG))
+	end))
+end
+
+-- lưu có trễ 0.6 giây để không ghi file liên tục khi giữ nút +/-
+local saveToken = 0
+local function save()
+	if not canSave then return end
+	saveToken += 1
+	local my = saveToken
+	task.delay(0.6, function()
+		if alive and my == saveToken then writeNow() end
+	end)
+end
+
+loadSettings()
+
+----------------------------------------------------------------
+-- HÀM TIỆN ÍCH
+----------------------------------------------------------------
 local function make(class, props, parent)
 	local o = Instance.new(class)
 	for k, v in pairs(props) do o[k] = v end
@@ -49,6 +126,49 @@ end
 local function corner(obj, r)
 	return make("UICorner", { CornerRadius = UDim.new(0, r) }, obj)
 end
+
+local function tw(obj, t, props)
+	TweenService:Create(obj, TweenInfo.new(t), props):Play()
+end
+
+local function onoff(v) return v and "ON" or "OFF" end
+
+-- kéo thả dùng được cả chuột lẫn cảm ứng; onClick chỉ chạy khi nhấn mà không kéo
+local function makeDraggable(obj, handle, onClick)
+	local dragging, moved, startMouse, startPos = false, false, nil, nil
+
+	track(handle.InputBegan:Connect(function(input)
+		local t = input.UserInputType
+		if t ~= Enum.UserInputType.MouseButton1 and t ~= Enum.UserInputType.Touch then return end
+		dragging, moved = true, false
+		startMouse, startPos = input.Position, obj.Position
+
+		local c
+		c = input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				c:Disconnect()
+				dragging = false
+				if not moved and onClick then onClick() end
+			end
+		end)
+	end))
+
+	track(UIS.InputChanged:Connect(function(input)
+		if not dragging then return end
+		local t = input.UserInputType
+		if t ~= Enum.UserInputType.MouseMovement and t ~= Enum.UserInputType.Touch then return end
+		local d = input.Position - startMouse
+		if not moved and d.Magnitude > 6 then moved = true end
+		if moved then
+			obj.Position = UDim2.new(
+				startPos.X.Scale, startPos.X.Offset + d.X,
+				startPos.Y.Scale, startPos.Y.Offset + d.Y
+			)
+		end
+	end))
+end
+
+local toggleHub  -- gán ở cuối file
 
 ----------------------------------------------------------------
 -- GUI GỐC + LOGO
@@ -67,7 +187,7 @@ local open = make("ImageButton", {
 	BackgroundTransparency = LOGO_ID ~= "" and 1 or 0,
 	Image = LOGO_ID ~= "" and ("rbxassetid://" .. LOGO_ID) or "",
 	ScaleType = Enum.ScaleType.Fit,
-	Draggable = true,
+	AutoButtonColor = false,
 }, gui)
 corner(open, 26)
 
@@ -89,18 +209,19 @@ if LOGO_ID == "" then
 	}, open)
 end
 
+-- bấm logo = bật/tắt hub, kéo logo = di chuyển logo
+makeDraggable(open, open, function() toggleHub() end)
+
 ----------------------------------------------------------------
--- ESP NPC
+-- ESP (NPC + PLAYER)
 ----------------------------------------------------------------
-local ESP = { NPC = false, Player = false, Tracked = {}, Conns = {}, Gen = 0 }
+local ESP = { Tracked = {}, Conns = {}, Gen = 0 }
 
 local ESP_CONFIG = {
 	NPCColor = Color3.fromRGB(0, 255, 100),
 	PlayerColor = Color3.fromRGB(0, 170, 255),
 	LowHealthColor = Color3.fromRGB(255, 60, 60),
 	FillTransparency = 0.5,
-	MaxDistance = 600,   -- xa hơn thì ẩn
-	MaxTargets = 20,     -- chỉ vẽ tối đa N mục tiêu gần nhất (giảm lag GPU)
 	UpdateRate = 0.15,   -- giây giữa mỗi lần cập nhật
 }
 
@@ -110,8 +231,12 @@ local espFolder = make("Folder", { Name = "ESPFolder" }, gui)
 local function getKind(model)
 	if not model:IsA("Model") or model == p.Character then return nil end
 	if not model:FindFirstChildOfClass("Humanoid") then return nil end
-	local kind = Players:GetPlayerFromCharacter(model) and "Player" or "NPC"
-	return ESP[kind] and kind or nil
+	if Players:GetPlayerFromCharacter(model) then
+		if CFG.espPlayer then return "Player" end
+	else
+		if CFG.espNPC then return "NPC" end
+	end
+	return nil
 end
 
 local function mainPart(model)
@@ -119,6 +244,12 @@ local function mainPart(model)
 		or model.PrimaryPart
 		or model:FindFirstChild("Head")
 		or model:FindFirstChildWhichIsA("BasePart", true)
+end
+
+local function isTeammate(data)
+	if not CFG.teamCheck then return false end
+	local plr = data.Plr
+	return plr ~= nil and p.Team ~= nil and plr.Team == p.Team
 end
 
 local function removeTarget(model)
@@ -165,6 +296,7 @@ local function addTarget(model)
 	ESP.Tracked[model] = {
 		Highlight = h, Gui = bb, Label = lbl,
 		Hum = model:FindFirstChildOfClass("Humanoid"),
+		Plr = Players:GetPlayerFromCharacter(model),
 		Root = part, Kind = kind, Color = color, Name = model.Name,
 		Shown = true, Dist = 0,
 	}
@@ -221,9 +353,10 @@ local function startESP()
 		if acc < ESP_CONFIG.UpdateRate then return end
 		acc = 0
 
+		local cam = workspace.CurrentCamera
 		local myRoot = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
-		local origin = myRoot and myRoot.Position or Camera.CFrame.Position
-		local maxDist = ESP_CONFIG.MaxDistance
+		local origin = myRoot and myRoot.Position or (cam and cam.CFrame.Position) or Vector3.zero
+		local maxDist, maxTargets = CFG.espDist, CFG.espMax
 		table.clear(list)
 
 		for model, data in pairs(ESP.Tracked) do
@@ -237,7 +370,7 @@ local function startESP()
 					data.Root = root
 				end
 				local dist = root and (root.Position - origin).Magnitude or 0
-				if hum.Health > 0 and dist <= maxDist then
+				if hum.Health > 0 and dist <= maxDist and not isTeammate(data) then
 					data.Dist = dist
 					list[#list + 1] = data
 				else
@@ -247,12 +380,12 @@ local function startESP()
 		end
 
 		-- chỉ vẽ N mục tiêu gần nhất
-		if #list > ESP_CONFIG.MaxTargets then
+		if #list > maxTargets then
 			table.sort(list, function(a, b) return a.Dist < b.Dist end)
 		end
 
 		for i, data in ipairs(list) do
-			if i > ESP_CONFIG.MaxTargets then
+			if i > maxTargets then
 				setShown(data, false)
 			else
 				setShown(data, true)
@@ -273,7 +406,7 @@ end
 function ESP.Refresh()
 	ESP.Gen += 1  -- huỷ đợt quét cũ đang chạy nền
 	clearAll()
-	if ESP.NPC or ESP.Player then startESP() end
+	if CFG.espNPC or CFG.espPlayer then startESP() end
 end
 
 function ESP.CountKind(kind)
@@ -294,8 +427,7 @@ local hub = make("Frame", {
 	Position = UDim2.new(0.5, 0, 0.5, -H_FULL / 2),
 	BackgroundColor3 = Color3.new(1, 1, 1),
 	Visible = false,
-	Active = true,
-	Draggable = true,
+	Active = true,  -- chặn click xuyên xuống game
 	ClipsDescendants = true,
 }, gui)
 corner(hub, 14)
@@ -322,13 +454,13 @@ local hubGrad = make("UIGradient", {
 
 if ANIMATIONS then
 	local accG = 0
-	RunService.Heartbeat:Connect(function(dt)
+	track(RunService.Heartbeat:Connect(function(dt)
 		if not hub.Visible then accG = 0 return end
 		accG += dt
 		if accG < 1 / 20 then return end  -- 20 lần/giây là đủ mượt
 		hubGrad.Rotation = (hubGrad.Rotation + accG * 90) % 360
 		accG = 0
-	end)
+	end))
 end
 
 -- header
@@ -341,6 +473,9 @@ make("UIGradient", {
 	Color = ColorSequence.new(Color3.fromRGB(28, 32, 48), Color3.fromRGB(16, 18, 26)),
 	Rotation = 90,
 }, header)
+
+-- chỉ kéo hub bằng thanh tiêu đề (để các trang bên trong cuộn được)
+makeDraggable(hub, header)
 
 local title = make("TextLabel", {
 	BackgroundTransparency = 1,
@@ -399,16 +534,24 @@ local body = make("Frame", {
 	BackgroundTransparency = 1,
 }, hub)
 
-local grid = make("Frame", {
-	Position = UDim2.fromOffset(8, 8),
-	Size = UDim2.new(1, -16, 0, 56),
+-- thanh tab
+local tabBar = make("Frame", {
+	Position = UDim2.fromOffset(8, 6),
+	Size = UDim2.new(1, -16, 0, 24),
 	BackgroundTransparency = 1,
 }, body)
-make("UIGridLayout", {
-	CellSize = UDim2.new(1 / 3, -4, 0, 56),
-	CellPadding = UDim2.fromOffset(6, 6),
+make("UIListLayout", {
+	FillDirection = Enum.FillDirection.Horizontal,
+	Padding = UDim.new(0, 4),
 	SortOrder = Enum.SortOrder.LayoutOrder,
-}, grid)
+}, tabBar)
+
+-- khu vực chứa các trang
+local pageHolder = make("Frame", {
+	Position = UDim2.fromOffset(8, 36),
+	Size = UDim2.new(1, -16, 1, -72),
+	BackgroundTransparency = 1,
+}, body)
 
 -- thanh trạng thái
 local footer = make("Frame", {
@@ -435,12 +578,18 @@ local statusLbl = make("TextLabel", {
 	TextSize = 11,
 	TextColor3 = THEME.Sub,
 	TextXAlignment = Enum.TextXAlignment.Left,
+	TextTruncate = Enum.TextTruncate.AtEnd,
 }, footer)
 
 local function setStatus(t)
 	statusLbl.Text = t
 	dot.BackgroundColor3 = THEME.Accent2
-	TweenService:Create(dot, TweenInfo.new(0.6), { BackgroundColor3 = THEME.Accent }):Play()
+	tw(dot, 0.6, { BackgroundColor3 = THEME.Accent })
+end
+
+-- báo trạng thái, trừ lúc đang khởi động
+local function say(t)
+	if not booting then setStatus(t) end
 end
 
 -- ===== Phóng to / thu nhỏ menu =====
@@ -477,170 +626,303 @@ local zoomOut = zoomBtn("A-", -66)
 
 local function applyZoom(z)
 	zoom = math.clamp(math.floor(z * 10 + 0.5) / 10, ZOOM_MIN, ZOOM_MAX)
+	CFG.zoom = zoom
 	zoomLbl.Text = math.floor(zoom * 100 + 0.5) .. "%"
-	TweenService:Create(hubScale, TweenInfo.new(0.15), { Scale = zoom }):Play()
+	tw(hubScale, 0.15, { Scale = zoom })
+	save()
 end
 
 zoomIn.MouseButton1Click:Connect(function() applyZoom(zoom + ZOOM_STEP) end)
 zoomOut.MouseButton1Click:Connect(function() applyZoom(zoom - ZOOM_STEP) end)
 
 ----------------------------------------------------------------
--- THẺ CHỨC NĂNG
+-- TÍNH NĂNG: SPEED / JUMP (ghi đè thuộc tính Humanoid)
 ----------------------------------------------------------------
-local function resizeHub(h)
-	currentH = h
-	TweenService:Create(hub, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-		Size = UDim2.fromOffset(W, h),
-	}):Play()
+local function getHum()
+	local c = p.Character
+	return c and c:FindFirstChildOfClass("Humanoid")
 end
 
-local function card(order, icon, name, isToggle, onClick)
-	local b = make("TextButton", {
-		Text = "",
-		AutoButtonColor = false,
-		BackgroundColor3 = THEME.Card,
-		LayoutOrder = order,
-	}, grid)
-	corner(b, 8)
+-- resolve(hum, v) trả về (tên thuộc tính, giá trị cần đặt)
+-- watch: các thuộc tính cần theo dõi để đặt lại khi game đổi
+local function newHumFeature(onKey, valKey, watch, resolve)
+	local F = { Conns = {}, Hum = nil, Prop = nil, Orig = nil }
 
-	local st = make("UIStroke", {
-		Color = THEME.Off,
-		Thickness = 1.2,
-		Transparency = 0.5,
-		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-	}, b)
-
-	make("TextLabel", {
-		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(8, 6),
-		Size = UDim2.fromOffset(24, 24),
-		Text = icon,
-		TextSize = 18,
-	}, b)
-
-	-- chấm trạng thái: xanh = đang bật
-	local dot = make("Frame", {
-		Position = UDim2.new(1, -16, 0, 8),
-		Size = UDim2.fromOffset(8, 8),
-		BackgroundColor3 = THEME.PillOff,
-		Visible = isToggle,
-	}, b)
-	corner(dot, 4)
-
-	local nameLbl = make("TextLabel", {
-		BackgroundTransparency = 1,
-		Position = UDim2.fromOffset(8, 34),
-		Size = UDim2.new(1, -12, 0, 16),
-		Text = name,
-		Font = Enum.Font.GothamBold,
-		TextScaled = true,
-		TextColor3 = THEME.Text,
-		TextXAlignment = Enum.TextXAlignment.Left,
-	}, b)
-	make("UITextSizeConstraint", { MaxTextSize = 11, MinTextSize = 7 }, nameLbl)
-
-	local api = { On = false }
-
-	function api.Set(on)
-		api.On = on
-		local ti = TweenInfo.new(0.2)
-		TweenService:Create(b, ti, { BackgroundColor3 = on and THEME.CardOn or THEME.Card }):Play()
-		TweenService:Create(st, ti, {
-			Color = on and THEME.Accent or THEME.Off,
-			Transparency = on and 0 or 0.5,
-		}):Play()
-		TweenService:Create(dot, ti, { BackgroundColor3 = on and THEME.Accent or THEME.PillOff }):Play()
+	local function enforce(hum)
+		local prop, val = resolve(hum, CFG[valKey])
+		if math.abs(hum[prop] - val) > 0.01 then hum[prop] = val end
 	end
 
-	b.MouseButton1Click:Connect(function() onClick(api) end)
-	return api
-end
+	-- nhớ giá trị gốc (chỉ 1 lần cho mỗi Humanoid) để trả lại khi tắt
+	local function capture(hum)
+		if F.Hum == hum then return end
+		F.Hum = hum
+		F.Prop = (resolve(hum, CFG[valKey]))
+		F.Orig = hum[F.Prop]
+	end
 
-local function onoff(v) return v and "ON" or "OFF" end
+	local function disconnectAll()
+		for _, c in ipairs(F.Conns) do c:Disconnect() end
+		table.clear(F.Conns)
+	end
 
--- ESP: mỗi loại một nút riêng
-local function espCard(order, icon, name, kind)
-	card(order, icon, name, true, function(c)
-		ESP[kind] = not ESP[kind]
-		c.Set(ESP[kind])
-		ESP.Refresh()
-		setStatus(name .. " " .. onoff(ESP[kind]))
-
-		if ESP[kind] then
-			task.delay(1.2, function()
-				if not ESP[kind] then return end
-				local n = ESP.CountKind(kind)
-				setStatus(n > 0
-					and (name .. " ON • " .. n .. " mục tiêu")
-					or (name .. ": chưa thấy mục tiêu nào"))
-			end)
+	-- gắn vào Humanoid mới (lúc hồi sinh)
+	function F.Bind(hum)
+		disconnectAll()
+		if not hum then return end
+		if CFG[onKey] then
+			capture(hum)
+			enforce(hum)
 		end
+
+		local n, t0 = 0, os.clock()
+		local function onChange()
+			if not CFG[onKey] then return end
+			local now = os.clock()
+			if now - t0 > 1 then n, t0 = 0, now end
+			n += 1
+			if n > 120 then return end  -- game ghi đè liên tục: bỏ cuộc để khỏi lag
+			enforce(hum)
+		end
+		for _, name in ipairs(watch) do
+			table.insert(F.Conns, hum:GetPropertyChangedSignal(name):Connect(onChange))
+		end
+	end
+
+	function F.Set(on)
+		local hum = getHum()
+		if not hum then return end
+		if on then
+			capture(hum)
+			enforce(hum)
+		elseif F.Hum == hum and F.Prop and F.Orig then
+			hum[F.Prop] = F.Orig
+		end
+	end
+
+	-- gọi khi đổi giá trị lúc đang bật
+	function F.Update()
+		local hum = getHum()
+		if hum and CFG[onKey] then
+			capture(hum)
+			enforce(hum)
+		end
+	end
+
+	-- kiểm tra xem game có đang ghi đè không
+	function F.Verify(label)
+		task.delay(1.5, function()
+			local hum = getHum()
+			if not alive or not hum or not CFG[onKey] then return end
+			local prop, val = resolve(hum, CFG[valKey])
+			if math.abs(hum[prop] - val) > 0.5 then
+				setStatus(label .. ": game đang ghi đè, có thể không hiệu quả")
+			end
+		end)
+	end
+
+	function F.Stop()
+		F.Set(false)
+		disconnectAll()
+	end
+
+	return F
+end
+
+local SpeedF = newHumFeature("speedOn", "speedVal", { "WalkSpeed" }, function(hum, v)
+	return "WalkSpeed", v
+end)
+
+local JumpF = newHumFeature("jumpOn", "jumpVal", { "JumpPower", "JumpHeight", "UseJumpPower" }, function(hum, v)
+	if hum.UseJumpPower then return "JumpPower", v end
+	return "JumpHeight", (v * v) / (2 * workspace.Gravity)  -- đổi JumpPower sang JumpHeight
+end)
+
+----------------------------------------------------------------
+-- TÍNH NĂNG: NOCLIP / INFINITE JUMP / FLY
+----------------------------------------------------------------
+-- Noclip: tắt va chạm các bộ phận của nhân vật, nhớ để trả lại khi tắt
+local NC = { Conn = nil, Saved = {} }
+
+function NC.Set(on)
+	if NC.Conn then NC.Conn:Disconnect() NC.Conn = nil end
+	if on then
+		NC.Conn = RunService.Stepped:Connect(function()
+			local c = p.Character
+			if not c then return end
+			for _, v in ipairs(c:GetChildren()) do
+				if v:IsA("BasePart") and v.CanCollide then
+					NC.Saved[v] = true
+					v.CanCollide = false
+				end
+			end
+		end)
+	else
+		for part in pairs(NC.Saved) do
+			if part.Parent then part.CanCollide = true end
+		end
+		table.clear(NC.Saved)
+	end
+end
+
+-- Infinite Jump: nhảy tiếp khi đang ở trên không
+local IJ = { Conn = nil }
+
+function IJ.Set(on)
+	if IJ.Conn then IJ.Conn:Disconnect() IJ.Conn = nil end
+	if on then
+		IJ.Conn = UIS.JumpRequest:Connect(function()
+			local hum = getHum()
+			if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+		end)
+	end
+end
+
+-- Fly: bay theo hướng camera. PC: Space lên, Ctrl xuống
+local FLY = { Conn = nil, Objs = {} }
+
+local function flyStop(restore)
+	local wasFlying = #FLY.Objs > 0
+	if FLY.Conn then FLY.Conn:Disconnect() FLY.Conn = nil end
+	for _, o in ipairs(FLY.Objs) do pcall(function() o:Destroy() end) end
+	table.clear(FLY.Objs)
+	if restore and wasFlying then
+		local hum = getHum()
+		if hum then
+			hum.PlatformStand = false
+			hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+		end
+	end
+end
+
+local function flyStart()
+	flyStop(false)
+	local char = p.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	local hum = getHum()
+	if not hrp or not hum then return false end
+
+	local att = make("Attachment", { Name = "VuongFlyAtt" }, hrp)
+	local lv = make("LinearVelocity", {
+		Attachment0 = att,
+		VelocityConstraintMode = Enum.VelocityConstraintMode.Vector,
+		MaxForce = math.huge,
+		VectorVelocity = Vector3.zero,
+		RelativeTo = Enum.ActuatorRelativeTo.World,
+	}, hrp)
+	local ao = make("AlignOrientation", {
+		Mode = Enum.OrientationAlignmentMode.OneAttachment,
+		Attachment0 = att,
+		RigidityEnabled = true,
+		CFrame = hrp.CFrame,
+	}, hrp)
+	FLY.Objs = { att, lv, ao }
+	hum.PlatformStand = true
+
+	local lastFlat = Vector3.new(0, 0, -1)
+	FLY.Conn = RunService.RenderStepped:Connect(function()
+		local cam = workspace.CurrentCamera
+		if not cam or not hrp.Parent then return end
+
+		local look = cam.CFrame.LookVector
+		local flat = Vector3.new(look.X, 0, look.Z)
+		if flat.Magnitude > 0.05 then lastFlat = flat.Unit end
+		local right = lastFlat:Cross(Vector3.yAxis)
+
+		-- hướng đi (joystick / WASD) chiếu lên hướng nhìn camera
+		local md = hum.MoveDirection
+		local vel = look * md:Dot(lastFlat) + right * md:Dot(right)
+		if UIS:IsKeyDown(Enum.KeyCode.Space) then vel += Vector3.yAxis end
+		if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then vel -= Vector3.yAxis end
+		if vel.Magnitude > 1 then vel = vel.Unit end
+
+		lv.VectorVelocity = vel * CFG.flySpeed
+		ao.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + lastFlat)
 	end)
+	return true
 end
 
-espCard(1, "🤖", "ESP NPC", "NPC")
-espCard(2, "👁", "ESP Player", "Player")
-
-----------------------------------------------------------------
--- TRANG INFO (thông tin game + mạng xã hội)
-----------------------------------------------------------------
-local MarketplaceService = game:GetService("MarketplaceService")
-local Stats = game:GetService("Stats")
-
-local infoPage = make("Frame", {
-	Position = UDim2.fromOffset(0, 0),
-	Size = UDim2.new(1, 0, 1, -34),  -- chừa chỗ cho thanh trạng thái
-	BackgroundColor3 = Color3.fromRGB(11, 12, 17),
-	BorderSizePixel = 0,
-	Visible = false,
-}, body)
-
-local backBtn = make("TextButton", {
-	Position = UDim2.fromOffset(10, 8),
-	Size = UDim2.fromOffset(86, 26),
-	BackgroundColor3 = Color3.fromRGB(46, 50, 66),
-	Text = "< QUAY LẠI",
-	Font = Enum.Font.GothamBold,
-	TextSize = 11,
-	TextColor3 = Color3.new(1, 1, 1),
-}, infoPage)
-corner(backBtn, 8)
-
-local infoTitle = make("TextLabel", {
-	BackgroundTransparency = 1,
-	Position = UDim2.new(0, 104, 0, 8),
-	Size = UDim2.new(1, -114, 0, 26),
-	Text = "⭐ THÔNG TIN",
-	Font = Enum.Font.GothamBlack,
-	TextSize = 13,
-	TextColor3 = Color3.new(1, 1, 1),
-	TextXAlignment = Enum.TextXAlignment.Right,
-}, infoPage)
-make("UIGradient", { Color = ColorSequence.new(THEME.Accent, THEME.Accent2) }, infoTitle)
-
-local scroll = make("ScrollingFrame", {
-	Position = UDim2.fromOffset(10, 42),
-	Size = UDim2.new(1, -20, 1, -46),
-	BackgroundTransparency = 1,
-	BorderSizePixel = 0,
-	ScrollBarThickness = 3,
-	ScrollBarImageColor3 = THEME.Accent,
-	AutomaticCanvasSize = Enum.AutomaticSize.Y,
-	CanvasSize = UDim2.new(),
-}, infoPage)
-make("UIListLayout", {
-	Padding = UDim.new(0, 6),
-	SortOrder = Enum.SortOrder.LayoutOrder,
-}, scroll)
-make("UIPadding", { PaddingRight = UDim.new(0, 6) }, scroll)
-
-local infoOrder = 0
-local function nextOrder()
-	infoOrder += 1
-	return infoOrder
+-- hồi sinh: gắn lại các tính năng vào nhân vật mới
+local function onCharacter(char)
+	local hum = char:WaitForChild("Humanoid", 10)
+	if not alive or not hum then return end
+	SpeedF.Bind(hum)
+	JumpF.Bind(hum)
+	if CFG.fly then
+		char:WaitForChild("HumanoidRootPart", 10)
+		if alive and CFG.fly then flyStart() end
+	end
 end
 
-local function section(text)
+----------------------------------------------------------------
+-- BỘ DỰNG GIAO DIỆN: TRANG, HÀNG, NÚT
+----------------------------------------------------------------
+local controls = {}  -- key -> { Refresh, Apply }: dùng cho khởi động + đặt lại mặc định
+local tabs = {}
+local refreshInfo = function() end  -- gán ở trang Info
+
+local orders = setmetatable({}, { __mode = "k" })
+local function nxt(page)
+	orders[page] = (orders[page] or 0) + 1
+	return orders[page]
+end
+
+local function newPage()
+	local sf = make("ScrollingFrame", {
+		Size = UDim2.fromScale(1, 1),
+		BackgroundTransparency = 1,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = THEME.Accent,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(),
+		Visible = false,
+	}, pageHolder)
+	make("UIListLayout", {
+		Padding = UDim.new(0, 5),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	}, sf)
+	make("UIPadding", { PaddingRight = UDim.new(0, 6) }, sf)
+	return sf
+end
+
+local function selectTab(id)
+	for tid, t in pairs(tabs) do
+		local on = tid == id
+		t.Page.Visible = on
+		tw(t.Btn, 0.15, { BackgroundColor3 = on and THEME.CardOn or THEME.Card })
+		t.Btn.TextColor3 = on and THEME.Accent or THEME.Sub
+		t.Stroke.Color = on and THEME.Accent or THEME.Off
+		t.Stroke.Transparency = on and 0 or 0.6
+	end
+	if id == "INFO" then refreshInfo() end
+end
+
+local function addTab(order, id, label)
+	local page = newPage()
+	local btn = make("TextButton", {
+		LayoutOrder = order,
+		Size = UDim2.new(0.25, -3, 1, 0),
+		BackgroundColor3 = THEME.Card,
+		AutoButtonColor = false,
+		Text = label,
+		Font = Enum.Font.GothamBold,
+		TextSize = 10,
+		TextColor3 = THEME.Sub,
+	}, tabBar)
+	corner(btn, 7)
+	local st = make("UIStroke", {
+		Color = THEME.Off,
+		Thickness = 1,
+		Transparency = 0.6,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	}, btn)
+	tabs[id] = { Page = page, Btn = btn, Stroke = st }
+	btn.MouseButton1Click:Connect(function() selectTab(id) end)
+	return page
+end
+
+local function section(page, text)
 	make("TextLabel", {
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, 0, 0, 18),
@@ -649,16 +931,31 @@ local function section(text)
 		TextSize = 11,
 		TextColor3 = THEME.Accent,
 		TextXAlignment = Enum.TextXAlignment.Left,
-		LayoutOrder = nextOrder(),
-	}, scroll)
+		LayoutOrder = nxt(page),
+	}, page)
 end
 
-local function row(labelText, initial)
+local function note(page, text)
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Size = UDim2.new(1, 0, 0, 28),
+		Text = text,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 9,
+		TextColor3 = THEME.Sub,
+		TextWrapped = true,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		LayoutOrder = nxt(page),
+	}, page)
+end
+
+local function row(page, labelText, initial)
 	local f = make("Frame", {
 		Size = UDim2.new(1, 0, 0, 26),
 		BackgroundColor3 = THEME.Card,
-		LayoutOrder = nextOrder(),
-	}, scroll)
+		LayoutOrder = nxt(page),
+	}, page)
 	corner(f, 8)
 	make("TextLabel", {
 		BackgroundTransparency = 1,
@@ -683,14 +980,274 @@ local function row(labelText, initial)
 	}, f)
 end
 
--- ===== Thông tin game đang chơi =====
-section("GAME ĐANG CHƠI")
-local rGame = row("Tên game", "Đang tải...")
-local rPlace = row("Place ID", tostring(game.PlaceId))
-local rPlayers = row("Người chơi", "-")
-local rPing = row("Ping", "-")
-local rFps = row("FPS", "-")
-local rUser = row("Tài khoản", p.DisplayName .. " (@" .. p.Name .. ")")
+-- công tắc bật/tắt gắn với CFG[key]
+local function addToggle(page, icon, text, key, apply)
+	local b = make("TextButton", {
+		Text = "",
+		AutoButtonColor = false,
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundColor3 = THEME.Card,
+		LayoutOrder = nxt(page),
+	}, page)
+	corner(b, 8)
+	local st = make("UIStroke", {
+		Color = THEME.Off,
+		Thickness = 1.2,
+		Transparency = 0.5,
+		ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+	}, b)
+
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(8, 0),
+		Size = UDim2.fromOffset(22, 30),
+		Text = icon,
+		TextSize = 15,
+		TextColor3 = THEME.Text,
+	}, b)
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(32, 0),
+		Size = UDim2.new(1, -84, 1, 0),
+		Text = text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		TextColor3 = THEME.Text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+	}, b)
+
+	local pill = make("Frame", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -8, 0.5, 0),
+		Size = UDim2.fromOffset(34, 16),
+		BackgroundColor3 = THEME.PillOff,
+	}, b)
+	corner(pill, 8)
+	local knob = make("Frame", {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 2, 0.5, 0),
+		Size = UDim2.fromOffset(12, 12),
+		BackgroundColor3 = Color3.new(1, 1, 1),
+	}, pill)
+	corner(knob, 6)
+
+	local function refresh()
+		local on = CFG[key]
+		tw(b, 0.18, { BackgroundColor3 = on and THEME.CardOn or THEME.Card })
+		tw(st, 0.18, { Color = on and THEME.Accent or THEME.Off, Transparency = on and 0 or 0.5 })
+		tw(pill, 0.18, { BackgroundColor3 = on and THEME.Accent or THEME.PillOff })
+		tw(knob, 0.18, { Position = UDim2.new(0, on and 20 or 2, 0.5, 0) })
+	end
+
+	b.MouseButton1Click:Connect(function()
+		CFG[key] = not CFG[key]
+		refresh()
+		apply(CFG[key])
+		save()
+	end)
+
+	controls[key] = { Refresh = refresh, Apply = function() apply(CFG[key]) end }
+	refresh()
+end
+
+-- bộ chỉnh số: nhấn 1 lần = 1 bước, giữ nút = chạy lặp
+local function addStepper(page, text, key, min, max, step, fmt, apply)
+	fmt = fmt or tostring
+	CFG[key] = math.clamp(CFG[key], min, max)
+
+	local f = make("Frame", {
+		Size = UDim2.new(1, 0, 0, 28),
+		BackgroundColor3 = THEME.Panel,
+		LayoutOrder = nxt(page),
+	}, page)
+	corner(f, 8)
+	make("TextLabel", {
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(10, 0),
+		Size = UDim2.new(1, -124, 1, 0),
+		Text = text,
+		Font = Enum.Font.GothamMedium,
+		TextSize = 10,
+		TextColor3 = THEME.Sub,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+	}, f)
+
+	local function stepBtn(txt, xOff)
+		local b = make("TextButton", {
+			AnchorPoint = Vector2.new(1, 0.5),
+			Position = UDim2.new(1, xOff, 0.5, 0),
+			Size = UDim2.fromOffset(26, 18),
+			BackgroundColor3 = Color3.fromRGB(46, 50, 66),
+			Text = txt,
+			Font = Enum.Font.GothamBold,
+			TextSize = 12,
+			TextColor3 = Color3.new(1, 1, 1),
+		}, f)
+		corner(b, 5)
+		return b
+	end
+
+	local plus = stepBtn("+", -6)
+	local valLbl = make("TextLabel", {
+		AnchorPoint = Vector2.new(1, 0.5),
+		Position = UDim2.new(1, -34, 0.5, 0),
+		Size = UDim2.fromOffset(52, 18),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBlack,
+		TextSize = 12,
+		TextColor3 = THEME.Accent,
+	}, f)
+	local minus = stepBtn("-", -88)
+
+	local function refresh() valLbl.Text = fmt(CFG[key]) end
+
+	local function setV(v)
+		v = math.clamp(v, min, max)
+		if v == CFG[key] then return end
+		CFG[key] = v
+		refresh()
+		apply(v)
+		save()
+	end
+
+	local function holdRepeat(btn, delta)
+		local token = 0
+		local function isPress(i)
+			return i.UserInputType == Enum.UserInputType.MouseButton1
+				or i.UserInputType == Enum.UserInputType.Touch
+		end
+		btn.InputBegan:Connect(function(i)
+			if not isPress(i) then return end
+			token += 1
+			local my = token
+			setV(CFG[key] + delta)
+			task.delay(0.4, function()
+				while alive and token == my do
+					setV(CFG[key] + delta)
+					task.wait(0.07)
+				end
+			end)
+		end)
+		btn.InputEnded:Connect(function(i)
+			if isPress(i) then token += 1 end
+		end)
+	end
+	holdRepeat(plus, step)
+	holdRepeat(minus, -step)
+
+	controls[key] = { Refresh = refresh, Apply = function() apply(CFG[key]) end }
+	refresh()
+end
+
+local function addButton(page, text, color, textColor, onClick)
+	local b = make("TextButton", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundColor3 = color,
+		Text = text,
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		TextColor3 = textColor,
+		LayoutOrder = nxt(page),
+	}, page)
+	corner(b, 8)
+	b.MouseButton1Click:Connect(onClick)
+	return b
+end
+
+----------------------------------------------------------------
+-- TAB: ESP
+----------------------------------------------------------------
+local pEsp = addTab(1, "ESP", "👁 ESP")
+
+local function espApply(kind, label)
+	return function(on)
+		ESP.Refresh()
+		say(label .. " " .. onoff(on))
+		if on and not booting then
+			task.delay(1.2, function()
+				if not alive or not CFG["esp" .. kind] then return end
+				local n = ESP.CountKind(kind)
+				setStatus(n > 0
+					and (label .. " ON • " .. n .. " mục tiêu")
+					or (label .. ": chưa thấy mục tiêu nào"))
+			end)
+		end
+	end
+end
+
+addToggle(pEsp, "🤖", "ESP NPC", "espNPC", espApply("NPC", "ESP NPC"))
+addToggle(pEsp, "👁", "ESP Player", "espPlayer", espApply("Player", "ESP Player"))
+addToggle(pEsp, "🛡", "Team Check (ẩn đồng đội)", "teamCheck", function(on)
+	say("Team Check " .. onoff(on))
+end)
+addStepper(pEsp, "Khoảng cách tối đa", "espDist", 100, 2000, 50, function(v) return v .. "m" end, function() end)
+addStepper(pEsp, "Số mục tiêu tối đa", "espMax", 5, 30, 5, tostring, function() end)
+note(pEsp, "Roblox chỉ vẽ tối đa ~31 Highlight cùng lúc nên số mục tiêu bị giới hạn ở 30.")
+
+----------------------------------------------------------------
+-- TAB: MOVE
+----------------------------------------------------------------
+local pMove = addTab(2, "MOVE", "⚡ MOVE")
+
+-- công tắc cho tính năng ghi đè Humanoid, có báo lỗi khi chưa có nhân vật
+local function humApply(label, F)
+	return function(on)
+		F.Set(on)
+		if booting then return end
+		if not getHum() then
+			say(label .. (on and ": chưa có nhân vật, sẽ áp dụng khi xuất hiện" or " OFF"))
+			return
+		end
+		say(label .. " " .. onoff(on))
+		if on then F.Verify(label) end
+	end
+end
+
+addToggle(pMove, "⚡", "Speed (chạy nhanh)", "speedOn", humApply("Speed", SpeedF))
+addStepper(pMove, "Tốc độ chạy", "speedVal", 16, 150, 4, tostring, function() SpeedF.Update() end)
+
+addToggle(pMove, "🦘", "Jump (nhảy cao)", "jumpOn", humApply("Jump", JumpF))
+addStepper(pMove, "Sức nhảy", "jumpVal", 50, 250, 10, tostring, function() JumpF.Update() end)
+
+addToggle(pMove, "👻", "Noclip (xuyên tường)", "noclip", function(on)
+	NC.Set(on)
+	say("Noclip " .. onoff(on))
+end)
+
+addToggle(pMove, "♾", "Infinite Jump", "infJump", function(on)
+	IJ.Set(on)
+	say("Infinite Jump " .. onoff(on))
+end)
+
+addToggle(pMove, "🕊", "Fly (bay)", "fly", function(on)
+	if on then
+		if flyStart() then
+			say("Fly ON • Space lên, Ctrl xuống")
+		elseif not booting then
+			say("Fly: chưa có nhân vật, sẽ bay khi xuất hiện")
+		end
+	else
+		flyStop(true)
+		say("Fly OFF")
+	end
+end)
+addStepper(pMove, "Tốc độ bay", "flySpeed", 20, 200, 10, tostring, function() end)
+note(pMove, "Fly: PC dùng Space (lên) / Ctrl (xuống). Điện thoại: bay theo hướng camera, nhìn lên/xuống để đổi độ cao.")
+
+----------------------------------------------------------------
+-- TAB: INFO
+----------------------------------------------------------------
+local pInfo = addTab(3, "INFO", "⭐ INFO")
+
+section(pInfo, "GAME ĐANG CHƠI")
+local rGame = row(pInfo, "Tên game", "Đang tải...")
+row(pInfo, "Place ID", tostring(game.PlaceId))
+local rPlayers = row(pInfo, "Người chơi", "-")
+local rPing = row(pInfo, "Ping", "-")
+local rFps = row(pInfo, "FPS", "-")
+row(pInfo, "Tài khoản", p.DisplayName .. " (@" .. p.Name .. ")")
 
 task.spawn(function()
 	local ok, res = pcall(function()
@@ -722,15 +1279,17 @@ local function getPing()
 	return ok and (v .. " ms") or "-"
 end
 
-local function refreshInfo()
+refreshInfo = function()
 	rPlayers.Text = #Players:GetPlayers() .. "/" .. Players.MaxPlayers
 	rPing.Text = getPing()
 	rFps.Text = fps > 0 and tostring(fps) or "..."
 end
 
+local minimized = false
+
 task.spawn(function()
-	while task.wait(1) do
-		if infoPage.Visible and hub.Visible then
+	while alive and task.wait(1) do
+		if pInfo.Visible and hub.Visible and not minimized then
 			startFps()
 			fps = frames
 			frames = 0
@@ -742,15 +1301,15 @@ task.spawn(function()
 end)
 
 -- ===== Mạng xã hội =====
-section("LIÊN HỆ / MẠNG XÃ HỘI")
+section(pInfo, "LIÊN HỆ / MẠNG XÃ HỘI")
 for _, s in ipairs(INFO.Socials) do
 	local f = make("TextButton", {
 		Text = "",
 		AutoButtonColor = false,
 		Size = UDim2.new(1, 0, 0, 44),
 		BackgroundColor3 = THEME.Card,
-		LayoutOrder = nextOrder(),
-	}, scroll)
+		LayoutOrder = nxt(pInfo),
+	}, pInfo)
 	corner(f, 10)
 	make("UIStroke", {
 		Color = THEME.Off,
@@ -806,11 +1365,11 @@ for _, s in ipairs(INFO.Socials) do
 		-- luôn copy link để dự phòng (Roblox hay chặn mở web từ script)
 		local copied = type(setclipboard) == "function" and pcall(setclipboard, s.Link)
 		local opened = pcall(function()
-			game:GetService("GuiService"):OpenBrowserWindow(s.Link)
+			GuiService:OpenBrowserWindow(s.Link)
 		end)
 
 		if opened then
-			setStatus("Đang mở " .. s.Name .. (copied and "... (đã copy link phòng khi không mở được)" or "..."))
+			setStatus("Đang mở " .. s.Name .. (copied and " (đã copy link dự phòng)" or "..."))
 		elseif copied then
 			setStatus("Đã copy link " .. s.Name .. ", dán vào trình duyệt")
 		else
@@ -818,7 +1377,9 @@ for _, s in ipairs(INFO.Socials) do
 		end
 
 		copy.Text = "OK"
-		task.delay(1.5, function() copy.Text = "MỞ" end)
+		task.delay(1.5, function()
+			if alive then copy.Text = "MỞ" end
+		end)
 	end
 
 	copy.MouseButton1Click:Connect(openLink)
@@ -826,28 +1387,44 @@ for _, s in ipairs(INFO.Socials) do
 end
 
 -- ===== Tác giả =====
-section("TÁC GIẢ")
-row("Hub", INFO.Author .. " • " .. INFO.Version)
-
-backBtn.MouseButton1Click:Connect(function()
-	infoPage.Visible = false
-	resizeHub(H_FULL)  -- về lại kích thước nhỏ
-	setStatus("Ready")
-end)
-
--- 6. Info
-card(3, "⭐", "Info", false, function()
-	resizeHub(H_INFO)  -- chỉ giãn ra khi xem Info
-	infoPage.Visible = true
-	refreshInfo()
-	setStatus("Thông tin game & liên hệ")
-end)
+section(pInfo, "TÁC GIẢ")
+row(pInfo, "Hub", INFO.Author .. " • " .. INFO.Version)
 
 ----------------------------------------------------------------
--- MỞ / ĐÓNG / THU NHỎ
+-- TAB: SET (cài đặt)
+----------------------------------------------------------------
+local pSet = addTab(4, "SET", "⚙ SET")
+
+section(pSet, "CÀI ĐẶT")
+row(pSet, "Lưu cài đặt", canSave and "Tự động" or "Không hỗ trợ")
+row(pSet, "Phím tắt", TOGGLE_KEY.Name)
+
+local function resetAll()
+	for k, v in pairs(DEFAULTS) do CFG[k] = v end
+	for _, c in pairs(controls) do
+		c.Apply()
+		c.Refresh()
+	end
+	applyZoom(DEFAULTS.zoom)
+	save()
+	setStatus("Đã đặt lại mặc định")
+end
+
+addButton(pSet, "💾  LƯU NGAY", THEME.Accent2, Color3.fromRGB(4, 16, 26), function()
+	if writeNow() then
+		setStatus("Đã lưu cài đặt")
+	else
+		setStatus("Executor không hỗ trợ lưu file")
+	end
+end)
+addButton(pSet, "↺  ĐẶT LẠI MẶC ĐỊNH", Color3.fromRGB(46, 50, 66), Color3.new(1, 1, 1), resetAll)
+
+local unloadBtn = addButton(pSet, "⏻  GỠ HUB (UNLOAD)", THEME.Danger, Color3.new(1, 1, 1), function() end)
+
+----------------------------------------------------------------
+-- MỞ / ĐÓNG / THU NHỎ / GỠ HUB
 ----------------------------------------------------------------
 local hubOpen = false
-local minimized = false
 
 local function showHub(state)
 	hubOpen = state
@@ -864,6 +1441,57 @@ local function showHub(state)
 	end
 end
 
+toggleHub = function() showHub(not hubOpen) end
 
+local function setMinimized(state)
+	minimized = state
+	body.Visible = not state
+	minBtn.Text = state and "+" or "_"
+	tw(hub, 0.25, { Size = UDim2.fromOffset(W, state and H_MIN or H_FULL) })
+end
 
-    
+minBtn.MouseButton1Click:Connect(function() setMinimized(not minimized) end)
+closeBtn.MouseButton1Click:Connect(function() showHub(false) end)
+
+-- phím tắt trên PC
+track(UIS.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == TOGGLE_KEY then toggleHub() end
+end))
+
+-- gỡ sạch toàn bộ hub: lưu cài đặt, trả mọi thứ về như cũ, xoá GUI
+local function unload()
+	if not alive then return end
+	writeNow()  -- lưu trạng thái hiện tại trước khi tắt các tính năng
+	alive = false
+	SpeedF.Stop()
+	JumpF.Stop()
+	NC.Set(false)
+	IJ.Set(false)
+	flyStop(true)
+	ESP.Gen += 1
+	clearAll()
+	stopFps()
+	for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
+	table.clear(conns)
+	gui:Destroy()
+	_G.VuongHubUnload = nil
+end
+
+_G.VuongHubUnload = unload
+unloadBtn.MouseButton1Click:Connect(unload)
+
+----------------------------------------------------------------
+-- KHỞI ĐỘNG
+----------------------------------------------------------------
+applyZoom(CFG.zoom)
+for _, c in pairs(controls) do c.Refresh() end
+for _, c in pairs(controls) do c.Apply() end  -- áp dụng cài đặt đã lưu
+
+track(p.CharacterAdded:Connect(onCharacter))
+if p.Character then task.spawn(onCharacter, p.Character) end
+
+selectTab("ESP")
+booting = false
+showHub(true)
+setStatus(canSave and "Ready • đã tải cài đặt" or "Ready")
