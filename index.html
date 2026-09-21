@@ -81,7 +81,7 @@ h1 {
 /* KHU VỰC TẠO TAB MỤC RIÊNG */
 .tab-navigation {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   background: rgba(0, 0, 0, 0.4);
   padding: 5px;
   border-radius: 12px;
@@ -91,8 +91,8 @@ h1 {
 
 .tab-btn {
   flex: 1;
-  padding: 10px 5px;
-  font-size: 12px;
+  padding: 8px 2px;
+  font-size: 11px;
   font-weight: 600;
   border: none;
   background: transparent;
@@ -223,6 +223,44 @@ canvas {
   box-shadow: 0 0 15px rgba(255, 153, 0, 0.4);
 }
 
+/* PHẦN 4: SCRIPT ROBLOX STYLES */
+.script-box {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #00ff88;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.script-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #00ff88;
+  margin-bottom: 6px;
+}
+
+.script-code {
+  background: #111;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  color: #00eaff;
+  word-break: break-all;
+  font-family: monospace;
+  max-height: 90px;
+  overflow-y: auto;
+  margin: 0 0 10px 0;
+  border: 1px dashed rgba(255, 255, 255, 0.2);
+}
+
+.btn-script {
+  background: linear-gradient(45deg, #00ff88, #00cc55);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+  font-size: 13px;
+  padding: 10px;
+}
+
 /* PHẦN 3: DONATE & LIÊN HỆ STYLES */
 .donate-section {
   padding: 12px;
@@ -295,9 +333,10 @@ canvas {
 
   <!-- THANH NÚT BẤM CHUYỂN MỤC RIÊNG (TAB) -->
   <div class="tab-navigation">
-    <button class="tab-btn active" onclick="switchTab(event, 'random-tab')">🎁 Random Acc</button>
-    <button class="tab-btn" onclick="switchTab(event, 'game-tab')">🎮 Mini Game</button>
-    <button class="tab-btn" onclick="switchTab(event, 'contact-tab')">💖 Donate / Lh</button>
+    <button class="tab-btn active" onclick="switchTab(event, 'random-tab')">🎁 Random</button>
+    <button class="tab-btn" onclick="switchTab(event, 'game-tab')">🎮 Game</button>
+    <button class="tab-btn" onclick="switchTab(event, 'script-tab')">⚡ Fix Lag</button>
+    <button class="tab-btn" onclick="switchTab(event, 'contact-tab')">💖 Donate</button>
   </div>
 
   <!-- MỤC 1: RANDOM ACC -->
@@ -327,6 +366,16 @@ canvas {
     </div>
     <button class="btn-action btn-game" onclick="resetFlappy()">🎮 CHƠI LẠI FLAPPY VƯƠNG</button>
     <p style="font-size: 11px; color: #aaa; margin-top: 8px;">💡 Chạm màn hình điện thoại hoặc bấm Space trên máy tính để nhảy.</p>
+  </div>
+
+  <!-- MỤC 4: SCRIPT ROBLOX FIX LAG -->
+  <div id="script-tab" class="tab-content">
+    <div class="script-box">
+      <div class="script-title">⚡ Script Fix Lag Roblox (By Vương)</div>
+      <p class="script-code" id="scriptText">loadstring(game:HttpGet("https://raw.githubusercontent.com/vuongdeptrai90/Siu/refs/heads/main/Script%20c%E1%BB%A7a%20V%C6%B0%C6%A1ng"))()</p>
+    </div>
+    <button class="btn-action btn-script" onclick="copyScript()">📋 COPY SCRIPT FIX LAG</button>
+    <p style="font-size: 11px; color: #aaa; margin-top: 10px;">💡 Dán đoạn script này vào Executor của bạn để tối ưu hóa trải nghiệm chơi game Roblox mượt mà hơn.</p>
   </div>
 
   <!-- MỤC 3: DONATE & LIÊN HỆ -->
@@ -499,6 +548,13 @@ function resetData() {
     updateUI();
     alert("✅ Đã khôi phục lại kho acc!");
   }
+}
+
+/* ==================== COPY SCRIPT ROBLOX ==================== */
+function copyScript() {
+  let scriptCode = document.getElementById("scriptText").innerText;
+  navigator.clipboard.writeText(scriptCode);
+  alert("✅ Đã copy Script Fix Lag của Vương!");
 }
 
 /* ==================== PHẦN 2: GAME FLAPPY VƯƠNG ==================== */
