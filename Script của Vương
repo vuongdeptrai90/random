@@ -461,7 +461,7 @@ local function itemName(inst, kind)
 end
 
 -- Tìm "giá trị" của vật phẩm: game nào cũng lưu khác nhau nên thử nhiều chỗ
--- (Đây nè con chó)
+-- (Attribute, NumberValue/IntValue/StringValue con, ActionText của prompt)
 local VALUE_KEYS = {
 	"value", "price", "cost", "worth", "sell", "amount",
 	"rarity", "tier", "level", "coin", "money", "cash", "gold", "gem",
