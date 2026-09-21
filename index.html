@@ -18,183 +18,197 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<title>Vương Hóng Hớt - Random Acc & Flappy Vương</title>
+<title>Vương Hóng Hớt - Hub Game & Acc</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-*{
-box-sizing:border-box;
-font-family:'Poppins',sans-serif;
-user-select: none;
+* {
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-body{
-margin:0;
-min-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
-overflow-x:hidden;
-color:white;
-background: linear-gradient(135deg,#030303,#151515,#222);
-padding:20px 0;
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  color: white;
+  background: linear-gradient(135deg, #030303, #151515, #222);
+  padding: 20px 0;
 }
 
-.box{
-width:95%;
-max-width:430px;
-padding:25px;
-background:rgba(255,255,255,0.05);
-border-radius:20px;
-border:1px solid rgba(255,255,255,0.15);
-box-shadow:0 0 25px rgba(0,234,255,0.2);
-text-align:center;
-position:relative;
-z-index:1;
+.box {
+  width: 95%;
+  max-width: 430px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 25px rgba(0, 234, 255, 0.2);
+  text-align: center;
+  position: relative;
+  z-index: 1;
 }
 
 .logo-img {
-width: 90px;
-height: 90px;
-border-radius: 50%;
-object-fit: cover;
-border: 3px solid #00eaff;
-box-shadow: 0 0 15px #00eaff;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #00eaff;
+  box-shadow: 0 0 15px #00eaff;
 }
 
-h1{
-margin:10px 0 5px 0;
-font-size:26px;
-color:#00eaff;
-text-shadow:0 0 10px #00eaff;
+h1 {
+  margin: 8px 0 2px 0;
+  font-size: 24px;
+  color: #00eaff;
+  text-shadow: 0 0 10px #00eaff;
 }
 
-p{
-color:#ddd;
-font-size: 14px;
+.subtitle {
+  color: #aaa;
+  font-size: 12px;
+  margin-top: 0;
+  margin-bottom: 15px;
 }
 
-button{
-width:100%;
-padding:14px;
-margin-top:12px;
-border:none;
-border-radius:12px;
-font-size:15px;
-background:linear-gradient(45deg,#00eaff,#008cff);
-font-weight:bold;
-cursor:pointer;
-box-shadow:0 0 15px rgba(0,234,255,0.4);
-transition: transform 0.2s;
-color: white;
+/* KHU VỰC TẠO TAB MỤC RIÊNG */
+.tab-navigation {
+  display: flex;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 5px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 15px;
 }
 
-button:hover{
-transform:scale(1.02);
+.tab-btn {
+  flex: 1;
+  padding: 10px 5px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: #aaa;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0;
+  box-shadow: none;
 }
 
-button:active{
-transform:scale(0.98);
+.tab-btn.active {
+  background: linear-gradient(45deg, #00eaff, #008cff);
+  color: white;
+  box-shadow: 0 0 10px rgba(0, 234, 255, 0.4);
 }
 
-button:disabled {
-background: #555 !important;
-box-shadow: none !important;
-cursor: not-allowed !important;
-transform: none !important;
+/* NỘI DUNG TỪNG TAB */
+.tab-content {
+  display: none;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-.result{
-display:none;
-margin-top:15px;
-padding:15px;
-border-radius:15px;
-background:rgba(0,0,0,0.5);
-border:1px solid #00eaff;
+.tab-content.active {
+  display: block;
 }
 
-.result p{
-background:#111;
-padding:10px;
-border-radius:8px;
-color:white;
-word-break: break-all;
-margin: 8px 0;
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.copy{
-background:linear-gradient(45deg,#00ff88,#00cc55);
-box-shadow:0 0 15px rgba(0,255,136,0.4);
+/* PHẦN 1: RANDOM ACC STYLES */
+.btn-action {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  background: linear-gradient(45deg, #00eaff, #008cff);
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 0 15px rgba(0, 234, 255, 0.4);
+  transition: transform 0.2s;
+  color: white;
+}
+
+.btn-action:hover { transform: scale(1.02); }
+.btn-action:active { transform: scale(0.98); }
+.btn-action:disabled {
+  background: #555 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+.result {
+  display: none;
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #00eaff;
+}
+
+.result p {
+  background: #111;
+  padding: 10px;
+  border-radius: 8px;
+  color: white;
+  word-break: break-all;
+  margin: 8px 0;
+}
+
+.copy {
+  background: linear-gradient(45deg, #00ff88, #00cc55);
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
 }
 
 .stats-container {
-margin-top: 15px;
-display: flex;
-justify-content: space-around;
-background: rgba(0,0,0,0.3);
-padding: 10px;
-border-radius: 10px;
-font-size: 14px;
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-around;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 10px;
+  border-radius: 10px;
+  font-size: 13px;
 }
 
-#count {
-color:#00ff88;
-font-weight:bold;
-}
-
-#remaining {
-color:#00eaff;
-font-weight:bold;
-}
+#count { color: #00ff88; font-weight: bold; }
+#remaining { color: #00eaff; font-weight: bold; }
 
 .reset-btn {
-background: transparent;
-border: 1px solid rgba(255,255,255,0.2);
-color: #aaa;
-font-size: 12px;
-padding: 6px 12px;
-margin-top: 12px;
-box-shadow: none;
-width: auto;
-}
-
-.reset-btn:hover {
-background: rgba(255,255,255,0.1);
-color: #fff;
-transform: none;
-}
-
-/* THÊM DÒNG PHÂN CÁCH */
-.divider {
-  margin: 25px 0 15px 0;
-  border-top: 1px dashed rgba(255, 255, 255, 0.2);
-  position: relative;
-}
-
-.divider-text {
-  position: absolute;
-  top: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #181818;
-  padding: 0 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #aaa;
   font-size: 12px;
-  color: #00eaff;
-  font-weight: 600;
+  padding: 6px 12px;
+  margin-top: 12px;
+  box-shadow: none;
+  width: auto;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-/* KHU VỰC GAME FLAPPY VƯƠNG */
+/* PHẦN 2: GAME FLAPPY STYLES */
 .game-container {
   position: relative;
   width: 100%;
   max-width: 320px;
   height: 320px;
-  margin: 10px auto;
+  margin: 0 auto 10px auto;
   border-radius: 15px;
   overflow: hidden;
   border: 2px solid #00eaff;
-  box-shadow: 0 0 15px rgba(0,234,255,0.3);
+  box-shadow: 0 0 15px rgba(0, 234, 255, 0.3);
   background: #2c3e50;
 }
 
@@ -204,12 +218,18 @@ canvas {
   height: 100%;
 }
 
+.btn-game {
+  background: linear-gradient(45deg, #ff9900, #ff5500);
+  box-shadow: 0 0 15px rgba(255, 153, 0, 0.4);
+}
+
+/* PHẦN 3: DONATE & LIÊN HỆ STYLES */
 .donate-section {
-  margin-top: 20px;
   padding: 12px;
   background: rgba(0, 234, 255, 0.03);
   border-radius: 15px;
   border: 1px solid rgba(0, 234, 255, 0.15);
+  margin-bottom: 15px;
 }
 
 .donate-title {
@@ -226,23 +246,9 @@ canvas {
 }
 
 .qr-img {
-  width: 150px;
+  width: 140px;
   border-radius: 10px;
   border: 2px solid #00eaff;
-}
-
-.contact-section {
-  margin-top: 15px;
-  padding-top: 12px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.2);
-}
-
-.contact-title {
-  font-size: 13px;
-  color: #aaa;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
 }
 
 .social-links {
@@ -264,25 +270,9 @@ canvas {
   transition: transform 0.2s;
 }
 
-.social-btn.youtube {
-  background: linear-gradient(45deg, #ff0000, #cc0000);
-  color: white;
-}
-
-.social-btn.tiktok {
-  background: linear-gradient(45deg, #00f2fe, #4facfe);
-  color: #000;
-}
-
-.social-btn.gmail {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.social-btn:hover {
-  transform: translateY(-2px);
-}
+.social-btn.youtube { background: linear-gradient(45deg, #ff0000, #cc0000); color: white; }
+.social-btn.tiktok { background: linear-gradient(45deg, #00f2fe, #4facfe); color: #000; }
+.social-btn.gmail { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255, 255, 255, 0.2); }
 
 .notice-text {
   font-size: 11px;
@@ -296,66 +286,90 @@ canvas {
 <body>
 
 <div class="box">
-<div class="logo">
-  <img src="logo.jpg" alt="Logo" class="logo-img">
-</div>
-
-<h1>Vương Hóng Hớt</h1>
-<p>🔥 Random Acc Liên Quân Miễn Phí 🔥</p>
-
-<button id="randomBtn" onclick="randomAcc()">
-🎁 RANDOM ACC NGAY
-</button>
-
-<div class="result" id="result">
-<p id="user"></p>
-<p id="pass"></p>
-<button class="copy" onclick="copyAcc()">📋 COPY ACC</button>
-</div>
-
-<div class="stats-container">
-  <div>🎯 Đã random: <span id="count">0</span> lần</div>
-  <div>📦 Còn lại: <span id="remaining">0</span> acc</div>
-</div>
-
-<button class="reset-btn" onclick="resetData()">🔄 Nạp lại kho acc ban đầu</button>
-
-<!-- DÒNG PHÂN CÁCH PHẦN GAME FLAPPY VƯƠNG -->
-<div class="divider">
-  <span class="divider-text">🍄 MINI GAME FLAPPY VƯƠNG 🍄</span>
-</div>
-
-<!-- KHU VỰC GAME FLAPPY VƯƠNG -->
-<div class="game-container">
-  <canvas id="birdGame" width="320" height="320"></canvas>
-</div>
-<button style="background: linear-gradient(45deg,#ff9900,#ff5500);" onclick="resetFlappy()">🎮 CHƠI LẠI FLAPPY VƯƠNG</button>
-
-<div class="donate-section">
-  <div class="donate-title">💖 Ủng Hộ / Donate Cho Kênh</div>
-  <div class="donate-desc">Quét mã QR để ủng hộ admin nhé!</div>
-  <img src="qrme.jpg" alt="QR ZaloPay" class="qr-img">
-</div>
-
-<div class="contact-section">
-  <div class="contact-title">📌 Kênh Liên Hệ & Hỗ Trợ</div>
-  <div class="social-links">
-    <a href="https://youtube.com/@vuonghothot?si=X_A8s2qco4FYY1TW" target="_blank" class="social-btn youtube">
-      ▶️ Đăng Ký YouTube Vương Hóng Hớt
-    </a>
-    <a href="https://www.tiktok.com/@vuong_120309" target="_blank" class="social-btn tiktok">
-      🎵 Follow TikTok @vuong_120309
-    </a>
-    <a href="mailto:nguyenquocvuong02004@gmail.com" class="social-btn gmail">
-      ✉️ Gmail: nguyenquocvuong02004@gmail.com
-    </a>
+  <div class="logo">
+    <img src="logo.jpg" alt="Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/80'">
   </div>
-</div>
 
-<p class="notice-text">📢 Tài khoản được phát miễn phí tùy may mắn, admin không nhận hoặc hỗ trợ lấy lại acc đâu nhé!</p>
+  <h1>Vương Hóng Hớt</h1>
+  <p class="subtitle">Kênh Game & Chia Sẻ Tài Khoản Miễn Phí</p>
+
+  <!-- THANH NÚT BẤM CHUYỂN MỤC RIÊNG (TAB) -->
+  <div class="tab-navigation">
+    <button class="tab-btn active" onclick="switchTab(event, 'random-tab')">🎁 Random Acc</button>
+    <button class="tab-btn" onclick="switchTab(event, 'game-tab')">🎮 Mini Game</button>
+    <button class="tab-btn" onclick="switchTab(event, 'contact-tab')">💖 Donate / Lh</button>
+  </div>
+
+  <!-- MỤC 1: RANDOM ACC -->
+  <div id="random-tab" class="tab-content active">
+    <button id="randomBtn" class="btn-action" onclick="randomAcc()">
+      🎁 RANDOM ACC NGAY
+    </button>
+
+    <div class="result" id="result">
+      <p id="user"></p>
+      <p id="pass"></p>
+      <button class="btn-action copy" onclick="copyAcc()">📋 COPY ACC</button>
+    </div>
+
+    <div class="stats-container">
+      <div>🎯 Đã random: <span id="count">0</span> lần</div>
+      <div>📦 Còn lại: <span id="remaining">0</span> acc</div>
+    </div>
+
+    <button class="reset-btn" onclick="resetData()">🔄 Nạp lại kho acc ban đầu</button>
+  </div>
+
+  <!-- MỤC 2: MINI GAME FLAPPY VƯƠNG -->
+  <div id="game-tab" class="tab-content">
+    <div class="game-container">
+      <canvas id="birdGame" width="320" height="320"></canvas>
+    </div>
+    <button class="btn-action btn-game" onclick="resetFlappy()">🎮 CHƠI LẠI FLAPPY VƯƠNG</button>
+    <p style="font-size: 11px; color: #aaa; margin-top: 8px;">💡 Chạm màn hình điện thoại hoặc bấm Space trên máy tính để nhảy.</p>
+  </div>
+
+  <!-- MỤC 3: DONATE & LIÊN HỆ -->
+  <div id="contact-tab" class="tab-content">
+    <div class="donate-section">
+      <div class="donate-title">💖 Ủng Hộ / Donate Cho Kênh</div>
+      <div class="donate-desc">Quét mã QR bên dưới để ủng hộ Admin nhé!</div>
+      <img src="qrme.jpg" alt="QR ZaloPay" class="qr-img" onerror="this.src='https://via.placeholder.com/140'">
+    </div>
+
+    <div class="social-links">
+      <a href="https://youtube.com/@vuonghothot?si=X_A8s2qco4FYY1TW" target="_blank" class="social-btn youtube">
+        ▶️ Đăng Ký YouTube Vương Hóng Hớt
+      </a>
+      <a href="https://www.tiktok.com/@vuong_120309" target="_blank" class="social-btn tiktok">
+        🎵 Follow TikTok @vuong_120309
+      </a>
+      <a href="mailto:nguyenquocvuong02004@gmail.com" class="social-btn gmail">
+        ✉️ Gmail: nguyenquocvuong02004@gmail.com
+      </a>
+    </div>
+  </div>
+
+  <p class="notice-text">📢 Tài khoản được phát miễn phí tùy may mắn, admin không nhận hoặc hỗ trợ lấy lại acc đâu nhé!</p>
 </div>
 
 <script>
+/* ==================== CHỨC NĂNG CHUYỂN TAB ==================== */
+function switchTab(evt, tabId) {
+  let contents = document.getElementsByClassName("tab-content");
+  for (let i = 0; i < contents.length; i++) {
+    contents[i].classList.remove("active");
+  }
+
+  let buttons = document.getElementsByClassName("tab-btn");
+  for (let i = 0; i < buttons.length; i++) {
+    buttons[i].classList.remove("active");
+  }
+
+  document.getElementById(tabId).classList.add("active");
+  evt.currentTarget.classList.add("active");
+}
+
 /* ==================== PHẦN 1: RANDOM ACC ==================== */
 const defaultAccounts = [
   {user:"songoku123abc", pass:"rapber123"},
@@ -487,8 +501,7 @@ function resetData() {
   }
 }
 
-
-/* ==================== PHẦN 2: GAME FLAPPY VƯƠNG (MÈO NẤM) ==================== */
+/* ==================== PHẦN 2: GAME FLAPPY VƯƠNG ==================== */
 const canvas = document.getElementById("birdGame");
 const ctx = canvas.getContext("2d");
 
@@ -573,89 +586,59 @@ function updateFlappy() {
   pipes = pipes.filter(p => p.x > -35);
 }
 
-// HÀM VẼ NHÂN VẬT MÈO NẤM VƯƠNG HÓNG HỚT
 function drawMushroomCat(x, y, velocity) {
   ctx.save();
   ctx.translate(x, y);
 
-  // Độ nghiêng khi nhảy
   let angle = Math.min(Math.PI / 4, Math.max(-Math.PI / 4, velocity * 0.1));
   ctx.rotate(angle);
 
-  // 1. TAI MÈO (Thò ra dưới nắp nấm)
   ctx.fillStyle = "#fff";
   ctx.strokeStyle = "#222";
   ctx.lineWidth = 1.5;
 
-  // Tai trái
   ctx.beginPath();
-  ctx.moveTo(-10, -5);
-  ctx.lineTo(-14, -15);
-  ctx.lineTo(-4, -10);
-  ctx.fill();
-  ctx.stroke();
+  ctx.moveTo(-10, -5); ctx.lineTo(-14, -15); ctx.lineTo(-4, -10);
+  ctx.fill(); ctx.stroke();
 
-  // Tai phải
   ctx.beginPath();
-  ctx.moveTo(4, -10);
-  ctx.lineTo(14, -15);
-  ctx.lineTo(10, -5);
-  ctx.fill();
-  ctx.stroke();
+  ctx.moveTo(4, -10); ctx.lineTo(14, -15); ctx.lineTo(10, -5);
+  ctx.fill(); ctx.stroke();
 
-  // Lòng tai hồng
   ctx.fillStyle = "#ffb6c1";
-  ctx.beginPath();
-  ctx.moveTo(-9, -6);
-  ctx.lineTo(-12, -13);
-  ctx.lineTo(-5, -9);
-  ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-9, -6); ctx.lineTo(-12, -13); ctx.lineTo(-5, -9); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(5, -9); ctx.lineTo(12, -13); ctx.lineTo(9, -6); ctx.fill();
 
-  ctx.beginPath();
-  ctx.moveTo(5, -9);
-  ctx.lineTo(12, -13);
-  ctx.lineTo(9, -6);
-  ctx.fill();
-
-  // 2. MŨ NẤM ĐỎ CUTE
   ctx.fillStyle = "#ff4757";
   ctx.strokeStyle = "#222";
   ctx.beginPath();
   ctx.arc(0, -6, 15, Math.PI, 0, false);
   ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  ctx.fill(); ctx.stroke();
 
-  // Chấm tròn trắng trên mũ nấm
   ctx.fillStyle = "#ffffff";
   ctx.beginPath(); ctx.arc(-7, -13, 2.5, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(0, -16, 2.5, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(7, -12, 2.5, 0, Math.PI * 2); ctx.fill();
 
-  // 3. KHUÔN MẶT MÈO MÀU TRẮNG TRÒN
   ctx.fillStyle = "#ffffff";
   ctx.strokeStyle = "#222";
   ctx.beginPath();
   ctx.arc(0, 4, 12, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
+  ctx.fill(); ctx.stroke();
 
-  // 4. MẮT MÈO TO TRÒN
   ctx.fillStyle = "#222";
   ctx.beginPath(); ctx.arc(-5, 2, 2.2, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(5, 2, 2.2, 0, Math.PI * 2); ctx.fill();
 
-  // Điểm sáng trong mắt
   ctx.fillStyle = "#fff";
   ctx.beginPath(); ctx.arc(-5.5, 1.2, 0.8, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(4.5, 1.2, 0.8, 0, Math.PI * 2); ctx.fill();
 
-  // 5. MÁ HỒNG CUTE
   ctx.fillStyle = "rgba(255, 105, 180, 0.6)";
   ctx.beginPath(); ctx.arc(-8, 5, 2, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(8, 5, 2, 0, Math.PI * 2); ctx.fill();
 
-  // 6. MŨI VÀ MIỆNG MÈO (Chữ :3)
   ctx.strokeStyle = "#222";
   ctx.lineWidth = 1.2;
   ctx.beginPath();
@@ -663,12 +646,9 @@ function drawMushroomCat(x, y, velocity) {
   ctx.arc(2, 6, 1.8, 0, Math.PI, false);
   ctx.stroke();
 
-  // 7. RÂU MÈO HAI BÊN
   ctx.beginPath();
-  // Râu trái
   ctx.moveTo(-11, 4); ctx.lineTo(-16, 2);
   ctx.moveTo(-11, 6); ctx.lineTo(-16, 7);
-  // Râu phải
   ctx.moveTo(11, 4); ctx.lineTo(16, 2);
   ctx.moveTo(11, 6); ctx.lineTo(16, 7);
   ctx.stroke();
@@ -677,32 +657,26 @@ function drawMushroomCat(x, y, velocity) {
 }
 
 function drawFlappy() {
-  // Nền trời
   ctx.fillStyle = "#70a1ff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Vẽ Ống
   ctx.fillStyle = "#2ed573";
   ctx.strokeStyle = "#000";
   ctx.lineWidth = 2;
   pipes.forEach(p => {
-    // Ống trên
     ctx.fillRect(p.x, 0, 35, p.top);
     ctx.strokeRect(p.x, 0, 35, p.top);
     ctx.fillRect(p.x - 3, p.top - 12, 41, 12);
     ctx.strokeRect(p.x - 3, p.top - 12, 41, 12);
 
-    // Ống dưới
     ctx.fillRect(p.x, canvas.height - p.bottom, 35, p.bottom);
     ctx.strokeRect(p.x, canvas.height - p.bottom, 35, p.bottom);
     ctx.fillRect(p.x - 3, canvas.height - p.bottom, 41, 12);
     ctx.strokeRect(p.x - 3, canvas.height - p.bottom, 41, 12);
   });
 
-  // Vẽ Nhân Vật Mèo Nấm
   drawMushroomCat(bird.x, bird.y, bird.velocity);
 
-  // Hiển thị Điểm
   ctx.fillStyle = "#fff";
   ctx.font = "bold 15px Poppins";
   ctx.shadowColor = "#000";
@@ -711,7 +685,6 @@ function drawFlappy() {
   ctx.fillText("Kỷ lục: " + highScore, 10, 45);
   ctx.shadowBlur = 0;
 
-  // Màn hình Game Over
   if (gameOver) {
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
