@@ -237,10 +237,6 @@ button:disabled {
 
 <body>
 
-<!-- Các tệp âm thanh hiệu ứng -->
-<audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" preload="auto"></audio>
-<audio id="copySound" src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" preload="auto"></audio>
-
 <div class="box">
   <div class="logo">
     <img src="logo.jpg" alt="Logo" class="logo-img">
@@ -373,16 +369,46 @@ let accounts = savedAccounts ? JSON.parse(savedAccounts) : [...defaultAccounts];
 let currentRawAcc = { user: "", pass: "" };
 let count = Number(localStorage.getItem("count")) || 0;
 
-updateUI();
+// Hệ thống âm thanh Web Audio API tích hợp
+let audioCtx = null;
 
-// Hàm phát âm thanh trợ giúp
-function playSFX(audioId) {
-  let audio = document.getElementById(audioId);
-  if (audio) {
-    audio.currentTime = 0; // Đặt lại về đầu để phát ngay lập tức
-    audio.play().catch(e => console.log("Lỗi âm thanh:", e));
+function playSound(type) {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  if (type === 'random') {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.15);
+    
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.15);
+  } else if (type === 'copy') {
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+    osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.08);
+
+    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.2);
   }
 }
+
+updateUI();
 
 function randomAcc(){
   if (accounts.length === 0) {
@@ -390,8 +416,7 @@ function randomAcc(){
     return;
   }
 
-  // Phát âm thanh Random
-  playSFX('clickSound');
+  playSound('random');
 
   let randomIndex = Math.floor(Math.random() * accounts.length);
   let acc = accounts.splice(randomIndex, 1)[0];
@@ -426,8 +451,7 @@ function copyText(elementId, type) {
   let val = type === 'Tài khoản' ? currentRawAcc.user : currentRawAcc.pass;
   if (!val) return;
 
-  // Phát âm thanh Copy
-  playSFX('copySound');
+  playSound('copy');
 
   navigator.clipboard.writeText(val);
   showToast("✅ Đã copy " + type + "!");
