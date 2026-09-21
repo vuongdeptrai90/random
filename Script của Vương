@@ -1,4 +1,4 @@
--- ☠ VƯƠNG HÓNG HỚT HUB — GAMING UI ☠  (v2.1)
+-- ☠ VƯƠNG HÓNG HỚT HUB — GAMING UI ☠  (v2.2)
 
 -- chạy lại script thì gỡ bản cũ trước, tránh bị chồng 2 hub
 if _G.VuongHubUnload then pcall(_G.VuongHubUnload) end
@@ -36,7 +36,7 @@ local SAVE_FILE = "VuongHub_Settings.json"  -- file lưu cài đặt (nếu exec
 -- Thông tin của bạn: sửa lại cho đúng, muốn thêm mạng xã hội thì thêm 1 dòng
 local INFO = {
 	Author = "Vương Hóng Hớt",
-	Version = "v2.1",
+	Version = "v2.2",
 	Socials = {
 		{ Icon = "▶", Name = "YouTube", Link = "https://youtube.com/@vuongrobloxez?si=bJT3pi3V2K9jN-Jt" },
 	},
@@ -66,6 +66,8 @@ local DEFAULTS = {
 	espNPC = false, espPlayer = false, teamCheck = false,
 	espDist = 600,   -- xa hơn thì ẩn
 	espMax = 20,     -- chỉ vẽ tối đa N mục tiêu gần nhất (Roblox giới hạn ~31 Highlight)
+	espItem = false, espPrompt = false,
+	itemMax = 30,    -- chỉ hiện tối đa N vật phẩm gần nhất
 	-- Di chuyển
 	speedOn = false, speedVal = 32,
 	jumpOn = false, jumpVal = 80,  -- tính theo JumpPower (mặc định game thường là 50)
@@ -415,6 +417,206 @@ end
 function ESP.CountKind(kind)
 	local n = 0
 	for _, d in pairs(ESP.Tracked) do
+		if d.Kind == kind then n += 1 end
+	end
+	return n
+end
+
+----------------------------------------------------------------
+-- ESP ITEM (vật phẩm rơi / vật phẩm nhặt được)
+----------------------------------------------------------------
+local ITEM = { Tracked = {}, Conns = {}, Gen = 0 }
+
+local ITEM_CFG = {
+	ToolColor = Color3.fromRGB(255, 215, 0),
+	PromptColor = Color3.fromRGB(255, 150, 50),
+	UpdateRate = 0.25,
+}
+
+local function itemPart(inst, kind)
+	if kind == "Tool" then
+		local h = inst:FindFirstChild("Handle")
+		if h and h:IsA("BasePart") then return h end
+		return inst:FindFirstChildWhichIsA("BasePart", true)
+	end
+	local par = inst.Parent
+	if not par then return nil end
+	if par:IsA("BasePart") then return par end
+	if par:IsA("Attachment") and par.Parent and par.Parent:IsA("BasePart") then
+		return par.Parent
+	end
+	if par:IsA("Model") then
+		return par.PrimaryPart or par:FindFirstChildWhichIsA("BasePart", true)
+	end
+	return nil
+end
+
+local function itemName(inst, kind)
+	if kind == "Prompt" then
+		local t = inst.ObjectText
+		if t == "" then t = inst.Parent and inst.Parent.Name or "Item" end
+		return t
+	end
+	return inst.Name
+end
+
+-- Tool đang được cầm (nằm trong nhân vật) thì không tính là đồ rơi
+local function itemValid(data)
+	local inst = data.Inst
+	if data.Kind == "Tool" then
+		local par = inst.Parent
+		return par ~= nil and not par:FindFirstChildOfClass("Humanoid")
+	end
+	return inst.Enabled
+end
+
+local function removeItem(inst)
+	local data = ITEM.Tracked[inst]
+	if not data then return end
+	data.Gui:Destroy()
+	ITEM.Tracked[inst] = nil
+end
+
+local function addItem(inst)
+	if ITEM.Tracked[inst] then return end
+	local kind
+	if inst.ClassName == "Tool" then
+		if not CFG.espItem then return end
+		kind = "Tool"
+	elseif inst.ClassName == "ProximityPrompt" then
+		if not CFG.espPrompt then return end
+		if inst:FindFirstAncestorOfClass("Tool") then return end
+		local m = inst:FindFirstAncestorWhichIsA("Model")
+		if m and m:FindFirstChildOfClass("Humanoid") then return end
+		kind = "Prompt"
+	else
+		return
+	end
+
+	local part = itemPart(inst, kind)
+	local bb = make("BillboardGui", {
+		Adornee = part,
+		AlwaysOnTop = true,
+		Enabled = false,
+		Size = UDim2.fromOffset(140, 20),
+		StudsOffset = Vector3.new(0, 1.5, 0),
+	}, espFolder)
+	local lbl = make("TextLabel", {
+		BackgroundTransparency = 1,
+		Size = UDim2.fromScale(1, 1),
+		Font = Enum.Font.GothamBold,
+		TextSize = 11,
+		TextColor3 = kind == "Tool" and ITEM_CFG.ToolColor or ITEM_CFG.PromptColor,
+		TextStrokeTransparency = 0.3,
+	}, bb)
+
+	ITEM.Tracked[inst] = {
+		Inst = inst, Kind = kind, Part = part,
+		Gui = bb, Label = lbl, Shown = false, Dist = 0,
+	}
+end
+
+local function setItemShown(data, on)
+	if data.Shown ~= on then
+		data.Shown = on
+		data.Gui.Enabled = on
+	end
+end
+
+local function clearItems()
+	for inst in pairs(ITEM.Tracked) do removeItem(inst) end
+	for _, c in ipairs(ITEM.Conns) do c:Disconnect() end
+	table.clear(ITEM.Conns)
+end
+
+local function startItems()
+	local gen = ITEM.Gen
+
+	-- quét nền, chia nhỏ từng đợt
+	task.spawn(function()
+		local n = 0
+		for _, v in ipairs(workspace:GetDescendants()) do
+			if ITEM.Gen ~= gen then return end
+			local c = v.ClassName
+			if c == "Tool" or c == "ProximityPrompt" then addItem(v) end
+			n += 1
+			if n % 2000 == 0 then task.wait() end
+		end
+	end)
+
+	-- vật phẩm mới xuất hiện / đồ bị vứt xuống
+	table.insert(ITEM.Conns, workspace.DescendantAdded:Connect(function(v)
+		local c = v.ClassName
+		if c ~= "Tool" and c ~= "ProximityPrompt" then return end
+		task.defer(function()
+			if ITEM.Gen == gen then addItem(v) end
+		end)
+	end))
+
+	-- vật phẩm bị nhặt / xoá
+	table.insert(ITEM.Conns, workspace.DescendantRemoving:Connect(function(v)
+		if ITEM.Tracked[v] then removeItem(v) end
+	end))
+
+	local acc, list = 0, {}
+	table.insert(ITEM.Conns, RunService.Heartbeat:Connect(function(dt)
+		acc += dt
+		if acc < ITEM_CFG.UpdateRate then return end
+		acc = 0
+
+		local cam = workspace.CurrentCamera
+		local myRoot = p.Character and p.Character:FindFirstChild("HumanoidRootPart")
+		local origin = myRoot and myRoot.Position or (cam and cam.CFrame.Position) or Vector3.zero
+		table.clear(list)
+
+		for inst, data in pairs(ITEM.Tracked) do
+			if not inst.Parent then
+				removeItem(inst)
+			else
+				local part = data.Part
+				if not part or not part.Parent then
+					part = itemPart(inst, data.Kind)
+					data.Part = part
+					data.Gui.Adornee = part
+				end
+				if part and itemValid(data) then
+					local dist = (part.Position - origin).Magnitude
+					if dist <= CFG.espDist then
+						data.Dist = dist
+						list[#list + 1] = data
+					else
+						setItemShown(data, false)
+					end
+				else
+					setItemShown(data, false)
+				end
+			end
+		end
+
+		table.sort(list, function(a, b) return a.Dist < b.Dist end)
+
+		for i, data in ipairs(list) do
+			if i > CFG.itemMax then
+				setItemShown(data, false)
+			else
+				setItemShown(data, true)
+				local d = math.floor(data.Dist / 5 + 0.5) * 5
+				local txt = string.format("%s | %dm", itemName(data.Inst, data.Kind), d)
+				if data.Label.Text ~= txt then data.Label.Text = txt end
+			end
+		end
+	end))
+end
+
+function ITEM.Refresh()
+	ITEM.Gen += 1
+	clearItems()
+	if CFG.espItem or CFG.espPrompt then startItems() end
+end
+
+function ITEM.CountKind(kind)
+	local n = 0
+	for _, d in pairs(ITEM.Tracked) do
 		if d.Kind == kind then n += 1 end
 	end
 	return n
@@ -1293,14 +1495,33 @@ local function espApply(kind, label)
 	end
 end
 
+local function itemApply(kind, key, label)
+	return function(on)
+		ITEM.Refresh()
+		say(label .. " " .. onoff(on))
+		if on and not booting then
+			task.delay(1.5, function()
+				if not alive or not CFG[key] then return end
+				local n = ITEM.CountKind(kind)
+				setStatus(n > 0
+					and (label .. " ON • " .. n .. " vật phẩm")
+					or (label .. ": chưa thấy vật phẩm nào"))
+			end)
+		end
+	end
+end
+
 addToggle(pEsp, "🤖", "ESP NPC", "espNPC", espApply("NPC", "ESP NPC"))
 addToggle(pEsp, "👁", "ESP Player", "espPlayer", espApply("Player", "ESP Player"))
 addToggle(pEsp, "🛡", "Team Check (ẩn đồng đội)", "teamCheck", function(on)
 	say("Team Check " .. onoff(on))
 end)
+addToggle(pEsp, "🎒", "ESP Item (đồ rơi)", "espItem", itemApply("Tool", "espItem", "ESP Item"))
+addToggle(pEsp, "✋", "ESP Prompt (đồ nhặt/rương)", "espPrompt", itemApply("Prompt", "espPrompt", "ESP Prompt"))
 addStepper(pEsp, "Khoảng cách tối đa", "espDist", 100, 2000, 50, function(v) return v .. "m" end, function() end)
 addStepper(pEsp, "Số mục tiêu tối đa", "espMax", 5, 30, 5, tostring, function() end)
-note(pEsp, "Roblox chỉ vẽ tối đa ~31 Highlight cùng lúc nên số mục tiêu bị giới hạn ở 30.")
+addStepper(pEsp, "Số vật phẩm tối đa", "itemMax", 10, 100, 10, tostring, function() end)
+note(pEsp, "Roblox chỉ vẽ tối đa ~31 Highlight cùng lúc nên số mục tiêu bị giới hạn ở 30. Item chỉ hiện nhãn tên, không dùng Highlight.")
 
 ----------------------------------------------------------------
 -- TAB: MOVE
@@ -1607,6 +1828,8 @@ local function unload()
 	LAG.Restore()
 	ESP.Gen += 1
 	clearAll()
+	ITEM.Gen += 1
+	clearItems()
 	stopFps()
 	for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
 	table.clear(conns)
