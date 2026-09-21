@@ -318,10 +318,41 @@ canvas {
   margin-top: 15px;
   line-height: 1.4;
 }
+
+/* HIỆU ỨNG THÔNG BÁO COPY XỊN XÒ (TOAST NOTIFICATION) */
+#toast {
+  visibility: hidden;
+  min-width: 250px;
+  background: rgba(15, 15, 15, 0.95);
+  color: #fff;
+  text-align: center;
+  border-radius: 12px;
+  padding: 12px 20px;
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%) translateY(50px);
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #00ff88;
+  box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+#toast.show {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 </style>
 </head>
 
 <body>
+
+<!-- KHUNG THÔNG BÁO TOAST -->
+<div id="toast">✅ Đã sao chép thành công!</div>
 
 <div class="box">
   <div class="logo">
@@ -403,6 +434,16 @@ canvas {
 </div>
 
 <script>
+/* ==================== HÀM HIỆN THÔNG BÁO TOAST ==================== */
+function showToast(message) {
+  let toast = document.getElementById("toast");
+  toast.innerText = message;
+  toast.className = "show";
+  setTimeout(function(){ 
+    toast.className = toast.className.replace("show", ""); 
+  }, 2500);
+}
+
 /* ==================== CHỨC NĂNG CHUYỂN TAB ==================== */
 function switchTab(evt, tabId) {
   let contents = document.getElementsByClassName("tab-content");
@@ -502,7 +543,7 @@ updateUI();
 
 function randomAcc(){
   if (accounts.length === 0) {
-    alert("⚠️ Đã hết tài khoản trong hệ thống!");
+    showToast("⚠️ Đã hết tài khoản trong hệ thống!");
     return;
   }
   let randomIndex = Math.floor(Math.random() * accounts.length);
@@ -537,7 +578,7 @@ function updateUI() {
 function copyAcc(){
   if (!currentAcc) return;
   navigator.clipboard.writeText(currentAcc);
-  alert("✅ Đã copy acc");
+  showToast("✅ Đã sao chép tài khoản thành công!");
 }
 
 function resetData() {
@@ -546,7 +587,7 @@ function resetData() {
     localStorage.setItem("remainingAccounts", JSON.stringify(accounts));
     document.getElementById("result").style.display = "none";
     updateUI();
-    alert("✅ Đã khôi phục lại kho acc!");
+    showToast("✅ Đã khôi phục lại kho acc!");
   }
 }
 
@@ -554,7 +595,7 @@ function resetData() {
 function copyScript() {
   let scriptCode = document.getElementById("scriptText").innerText;
   navigator.clipboard.writeText(scriptCode);
-  alert("✅ Đã copy Script Fix Lag của Vương!");
+  showToast("✅ Đã sao chép Script Fix Lag!");
 }
 
 /* ==================== PHẦN 2: GAME FLAPPY VƯƠNG ==================== */
