@@ -467,6 +467,7 @@ fetch('random.json')
   .then(data => {
       let savedAccounts = localStorage.getItem("remainingAccounts");
       accounts = savedAccounts ? JSON.parse(savedAccounts) : data;
+       
       console.log("Đã tải xong:", accounts.length, "tài khoản");
       
       // Gọi updateUI ở đây để chắc chắn dữ liệu đã về rồi mới hiển thị lên web
