@@ -461,27 +461,23 @@ function switchTab(evt, tabId) {
 }
 
 /* ==================== PHẦN 1: RANDOM ACC ==================== */
-// Thay vì dùng mảng hardcode, ta dùng fetch để gọi file random.json
+let accounts = [];
+let originalData = []; // Lưu trữ dữ liệu gốc từ file JSON để phục vụ việc Reset
+let currentAcc = "";
+let count = Number(localStorage.getItem("count")) || 0;
+let isCooldown = false;
+
+// Tiến hành tải danh sách từ file random.json
 fetch('random.json')
   .then(response => response.json())
   .then(data => {
+      originalData = data; // Lưu lại dữ liệu gốc
       let savedAccounts = localStorage.getItem("remainingAccounts");
       accounts = savedAccounts ? JSON.parse(savedAccounts) : data;
-       
       console.log("Đã tải xong:", accounts.length, "tài khoản");
-      
-      // Gọi updateUI ở đây để chắc chắn dữ liệu đã về rồi mới hiển thị lên web
       updateUI(); 
   })
   .catch(error => console.error("Lỗi đọc file json:", error));
-     
-  
- 
-
-
-let isCooldown = false;
-
-updateUI();
 
 function randomAcc(){
   if (isCooldown) return;
@@ -524,8 +520,8 @@ function randomAcc(){
 }
 
 function updateUI() {
-  document.getElementById("count").innerHTML = count;
-  document.getElementById("remaining").innerHTML = accounts.length;
+  document.getElementById("count").innerText = count;
+  document.getElementById("remaining").innerText = accounts.length;
 
   let btn = document.getElementById("randomBtn");
   if (!isCooldown) {
@@ -547,7 +543,7 @@ function copyAcc(){
 
 function resetData() {
   if (confirm("Bạn có muốn nạp lại kho acc ban đầu không?")) {
-    accounts = [...defaultAccounts];
+    accounts = [...originalData];
     localStorage.setItem("remainingAccounts", JSON.stringify(accounts));
     document.getElementById("result").style.display = "none";
     isCooldown = false;
