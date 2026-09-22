@@ -462,18 +462,19 @@ function switchTab(evt, tabId) {
 
 /* ==================== PHẦN 1: RANDOM ACC ==================== */
 let accounts = [];
-let originalData = []; // Lưu trữ dữ liệu gốc từ file JSON để phục vụ việc Reset
+let originalData = []; // Lưu trữ dữ liệu gốc từ file JSON
 let currentAcc = "";
 let count = Number(localStorage.getItem("count")) || 0;
 let isCooldown = false;
 
-// Tiến hành tải danh sách từ file random.json
+// Đọc dữ liệu từ file random.json
 fetch('random.json')
   .then(response => response.json())
   .then(data => {
-      originalData = data; // Lưu lại dữ liệu gốc
+      originalData = data; // Lưu dữ liệu gốc để dùng khi Reset
       let savedAccounts = localStorage.getItem("remainingAccounts");
       accounts = savedAccounts ? JSON.parse(savedAccounts) : data;
+       
       console.log("Đã tải xong:", accounts.length, "tài khoản");
       updateUI(); 
   })
@@ -520,6 +521,7 @@ function randomAcc(){
 }
 
 function updateUI() {
+  // SỬA LỖI: Dùng innerText thay cho innerHTML để tránh mất thẻ span gây lỗi [object HTMLSpanElement]
   document.getElementById("count").innerText = count;
   document.getElementById("remaining").innerText = accounts.length;
 
@@ -543,6 +545,7 @@ function copyAcc(){
 
 function resetData() {
   if (confirm("Bạn có muốn nạp lại kho acc ban đầu không?")) {
+    // SỬA LỖI: Dùng originalData thay vì defaultAccounts đã bị xóa
     accounts = [...originalData];
     localStorage.setItem("remainingAccounts", JSON.stringify(accounts));
     document.getElementById("result").style.display = "none";
