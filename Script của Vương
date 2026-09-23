@@ -1,4 +1,4 @@
--- ☠ VƯƠNG HÓNG HỚT HUB — GAMING UI ☠  (v2.7)
+-- ☠ VƯƠNG HÓNG HỚT HUB — GAMING UI ☠  (v2.7 Fixed)
 
 -- chạy lại script thì gỡ bản cũ trước, tránh bị chồng 2 hub
 if _G.VuongHubUnload then pcall(_G.VuongHubUnload) end
@@ -38,7 +38,7 @@ local LOGO_ID = ""
 local LOGO_URL = "https://raw.githubusercontent.com/vuongdeptrai90/random/refs/heads/main/logo.jpg"
 local LOGO_FILE = "VuongHub_Logo.png"
 local LOGO_WEB_FILE = "VuongHub_Logo_Web.jpg"
-local LOGO_B64 = "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"
+local LOGO_B64 = "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"
 local TOGGLE_KEY = Enum.KeyCode.RightShift  -- phím bật/tắt hub trên PC
 local SAVE_FILE = "VuongHub_Settings.json"  -- file lưu cài đặt (nếu executor hỗ trợ)
 
@@ -259,8 +259,6 @@ local function upgradeLogoAsync(onReady)
 	end)
 end
 
-local toggleHub  -- gán ở cuối file
-
 ----------------------------------------------------------------
 -- GUI GỐC + LOGO
 ----------------------------------------------------------------
@@ -303,9 +301,6 @@ if not hasLogo then
 		TextScaled = true,
 	}, open)
 end
-
--- bấm logo = bật/tắt hub, kéo logo = di chuyển logo
-makeDraggable(open, open, function() toggleHub() end)
 
 -- thử nâng cấp logo bằng bản mới nhất từ GitHub, chạy ngầm phía sau — không chặn hub hiện ra
 upgradeLogoAsync(function(img)
@@ -562,8 +557,6 @@ local function itemName(inst, kind)
 	return inst.Name
 end
 
--- Tìm "giá trị" của vật phẩm: game nào cũng lưu khác nhau nên thử nhiều chỗ
--- (Attribute, NumberValue/IntValue/StringValue con, ActionText của prompt)
 local VALUE_KEYS = {
 	"value", "price", "cost", "worth", "sell", "amount",
 	"rarity", "tier", "level", "coin", "money", "cash", "gold", "gem",
@@ -588,13 +581,11 @@ local function matchKey(name)
 end
 
 local function findValue(root)
-	-- 1) Attribute có tên giống giá trị
 	for name, v in pairs(root:GetAttributes()) do
 		if (type(v) == "number" or type(v) == "string") and matchKey(name) then
 			return name, v
 		end
 	end
-	-- 2) Value con có tên giống giá trị
 	local fallbackName, fallbackVal
 	for _, c in ipairs(root:GetChildren()) do
 		if c:IsA("NumberValue") or c:IsA("IntValue") or c:IsA("StringValue") then
@@ -604,7 +595,6 @@ local function findValue(root)
 			end
 		end
 	end
-	-- 3) không khớp tên thì lấy Value số đầu tiên
 	return fallbackName, fallbackVal
 end
 
@@ -626,7 +616,6 @@ local function itemValueText(data)
 		if name ~= nil then return name .. ": " .. fmtVal(v) end
 	end
 
-	-- nhiều game ghi giá trong ActionText của prompt (vd "Buy $100")
 	if data.Kind == "Prompt" then
 		local a = inst.ActionText
 		if a ~= "" and a:lower() ~= "interact" then return a end
@@ -636,7 +625,6 @@ local function itemValueText(data)
 	return nil
 end
 
--- Tool đang được cầm (nằm trong nhân vật) thì không tính là đồ rơi
 local function itemValid(data)
 	local inst = data.Inst
 	if data.Kind == "Tool" then
@@ -708,7 +696,6 @@ end
 local function startItems()
 	local gen = ITEM.Gen
 
-	-- quét nền, chia nhỏ từng đợt
 	task.spawn(function()
 		local n = 0
 		for _, v in ipairs(workspace:GetDescendants()) do
@@ -720,7 +707,6 @@ local function startItems()
 		end
 	end)
 
-	-- vật phẩm mới xuất hiện / đồ bị vứt xuống
 	table.insert(ITEM.Conns, workspace.DescendantAdded:Connect(function(v)
 		local c = v.ClassName
 		if c ~= "Tool" and c ~= "ProximityPrompt" then return end
@@ -729,7 +715,6 @@ local function startItems()
 		end)
 	end))
 
-	-- vật phẩm bị nhặt / xoá
 	table.insert(ITEM.Conns, workspace.DescendantRemoving:Connect(function(v)
 		if ITEM.Tracked[v] then removeItem(v) end
 	end))
@@ -826,7 +811,6 @@ make("UIGradient", {
 
 local hubScale = make("UIScale", { Scale = 1 }, hub)
 
--- viền neon chạy màu
 local hubStroke = make("UIStroke", {
 	Thickness = 2,
 	Color = Color3.new(1, 1, 1),
@@ -862,7 +846,6 @@ make("UIGradient", {
 	Rotation = 90,
 }, header)
 
--- chỉ kéo hub bằng thanh tiêu đề (để các trang bên trong cuộn được)
 makeDraggable(hub, header)
 
 local title = make("TextLabel", {
@@ -888,7 +871,6 @@ make("TextLabel", {
 	TextXAlignment = Enum.TextXAlignment.Left,
 }, header)
 
--- đường sáng dưới header
 local line = make("Frame", {
 	AnchorPoint = Vector2.new(0, 1),
 	Position = UDim2.fromScale(0, 1),
@@ -922,7 +904,6 @@ local body = make("Frame", {
 	BackgroundTransparency = 1,
 }, hub)
 
--- thanh tab
 local tabBar = make("Frame", {
 	Position = UDim2.fromOffset(8, 6),
 	Size = UDim2.new(1, -16, 0, 24),
@@ -934,14 +915,12 @@ make("UIListLayout", {
 	SortOrder = Enum.SortOrder.LayoutOrder,
 }, tabBar)
 
--- khu vực chứa các trang
 local pageHolder = make("Frame", {
 	Position = UDim2.fromOffset(8, 36),
 	Size = UDim2.new(1, -16, 1, -72),
 	BackgroundTransparency = 1,
 }, body)
 
--- thanh trạng thái
 local footer = make("Frame", {
 	AnchorPoint = Vector2.new(0, 1),
 	Position = UDim2.new(0, 8, 1, -6),
@@ -975,7 +954,6 @@ local function setStatus(t)
 	tw(dot, 0.6, { BackgroundColor3 = THEME.Accent })
 end
 
--- báo trạng thái, trừ lúc đang khởi động
 local function say(t)
 	if not booting then setStatus(t) end
 end
@@ -1031,8 +1009,6 @@ local function getHum()
 	return c and c:FindFirstChildOfClass("Humanoid")
 end
 
--- resolve(hum, v) trả về (tên thuộc tính, giá trị cần đặt)
--- watch: các thuộc tính cần theo dõi để đặt lại khi game đổi
 local function newHumFeature(onKey, valKey, watch, resolve)
 	local F = { Conns = {}, Hum = nil, Prop = nil, Orig = nil }
 
@@ -1041,7 +1017,6 @@ local function newHumFeature(onKey, valKey, watch, resolve)
 		if math.abs(hum[prop] - val) > 0.01 then hum[prop] = val end
 	end
 
-	-- nhớ giá trị gốc (chỉ 1 lần cho mỗi Humanoid) để trả lại khi tắt
 	local function capture(hum)
 		if F.Hum == hum then return end
 		F.Hum = hum
@@ -1054,7 +1029,6 @@ local function newHumFeature(onKey, valKey, watch, resolve)
 		table.clear(F.Conns)
 	end
 
-	-- gắn vào Humanoid mới (lúc hồi sinh)
 	function F.Bind(hum)
 		disconnectAll()
 		if not hum then return end
@@ -1069,7 +1043,7 @@ local function newHumFeature(onKey, valKey, watch, resolve)
 			local now = os.clock()
 			if now - t0 > 1 then n, t0 = 0, now end
 			n += 1
-			if n > 120 then return end  -- game ghi đè liên tục: bỏ cuộc để khỏi lag
+			if n > 120 then return end
 			enforce(hum)
 		end
 		for _, name in ipairs(watch) do
@@ -1088,7 +1062,6 @@ local function newHumFeature(onKey, valKey, watch, resolve)
 		end
 	end
 
-	-- gọi khi đổi giá trị lúc đang bật
 	function F.Update()
 		local hum = getHum()
 		if hum and CFG[onKey] then
@@ -1097,7 +1070,6 @@ local function newHumFeature(onKey, valKey, watch, resolve)
 		end
 	end
 
-	-- kiểm tra xem game có đang ghi đè không
 	function F.Verify(label)
 		task.delay(1.5, function()
 			local hum = getHum()
@@ -1123,13 +1095,12 @@ end)
 
 local JumpF = newHumFeature("jumpOn", "jumpVal", { "JumpPower", "JumpHeight", "UseJumpPower" }, function(hum, v)
 	if hum.UseJumpPower then return "JumpPower", v end
-	return "JumpHeight", (v * v) / (2 * workspace.Gravity)  -- đổi JumpPower sang JumpHeight
+	return "JumpHeight", (v * v) / (2 * workspace.Gravity)
 end)
 
 ----------------------------------------------------------------
 -- TÍNH NĂNG: NOCLIP / INFINITE JUMP / FLY
 ----------------------------------------------------------------
--- Noclip: tắt va chạm các bộ phận của nhân vật, nhớ để trả lại khi tắt
 local NC = { Conn = nil, Saved = {} }
 
 function NC.Set(on)
@@ -1153,7 +1124,6 @@ function NC.Set(on)
 	end
 end
 
--- Infinite Jump: nhảy tiếp khi đang ở trên không
 local IJ = { Conn = nil }
 
 function IJ.Set(on)
@@ -1166,7 +1136,6 @@ function IJ.Set(on)
 	end
 end
 
--- Fly: bay theo hướng camera. PC: Space lên, Ctrl xuống
 local FLY = { Conn = nil, Objs = {} }
 
 local function flyStop(restore)
@@ -1217,7 +1186,6 @@ local function flyStart()
 		if flat.Magnitude > 0.05 then lastFlat = flat.Unit end
 		local right = lastFlat:Cross(Vector3.yAxis)
 
-		-- hướng đi (joystick / WASD) chiếu lên hướng nhìn camera
 		local md = hum.MoveDirection
 		local vel = look * md:Dot(lastFlat) + right * md:Dot(right)
 		if UIS:IsKeyDown(Enum.KeyCode.Space) then vel += Vector3.yAxis end
@@ -1230,7 +1198,6 @@ local function flyStart()
 	return true
 end
 
--- hồi sinh: gắn lại các tính năng vào nhân vật mới
 local function onCharacter(char)
 	local hum = char:WaitForChild("Humanoid", 10)
 	if not alive or not hum then return end
@@ -1246,13 +1213,12 @@ end
 -- TÍNH NĂNG: FIX LAG (giảm đồ họa để tăng FPS, hoàn tác được)
 ----------------------------------------------------------------
 local LAG = {
-	Orig = setmetatable({}, { __mode = "k" }),  -- giá trị gốc của từng vật thể
+	Orig = setmetatable({}, { __mode = "k" }),
 	OrigQuality = nil,
 	Conns = {},
 	Gen = 0,
 }
 
--- đổi thuộc tính nhưng nhớ giá trị gốc (chỉ nhớ lần đầu) để khôi phục
 local function lagSet(inst, prop, value)
 	local rec = LAG.Orig[inst]
 	if not rec then
@@ -1264,12 +1230,10 @@ local function lagSet(inst, prop, value)
 end
 
 local function lagProcess(v, level)
-	-- mức 1: tắt hiệu ứng nặng (hạt, vệt, tia, lửa, khói, bloom/blur...)
 	if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam")
 		or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("PostEffect") then
 		lagSet(v, "Enabled", false)
 	elseif level >= 2 then
-		-- mức 2: đơn giản hoá vật liệu, bóng, hình dán (bỏ qua nhân vật cho khỏi xấu)
 		if v:IsA("BasePart") then
 			if not v:IsA("Terrain") and not (v.Parent and v.Parent:FindFirstChildOfClass("Humanoid")) then
 				lagSet(v, "Material", Enum.Material.SmoothPlastic)
@@ -1286,7 +1250,7 @@ local function lagProcess(v, level)
 end
 
 function LAG.Restore()
-	LAG.Gen += 1  -- huỷ đợt quét đang chạy nền
+	LAG.Gen += 1
 	for _, c in ipairs(LAG.Conns) do c:Disconnect() end
 	table.clear(LAG.Conns)
 
@@ -1306,11 +1270,10 @@ function LAG.Restore()
 end
 
 function LAG.Apply()
-	LAG.Restore()  -- luôn bắt đầu từ trạng thái gốc (đổi mức không bị chồng)
+	LAG.Restore()
 	local gen = LAG.Gen
 	local level = CFG.lagLevel
 
-	-- đồ họa chung
 	pcall(function()
 		LAG.OrigQuality = settings().Rendering.QualityLevel
 		settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
@@ -1326,14 +1289,12 @@ function LAG.Apply()
 		pcall(lagSet, terrain, "Decoration", false)
 	end
 
-	-- vật thể mới xuất hiện sau đó
 	local function onAdded(v)
 		if LAG.Gen == gen then pcall(lagProcess, v, level) end
 	end
 	table.insert(LAG.Conns, workspace.DescendantAdded:Connect(onAdded))
 	table.insert(LAG.Conns, Lighting.DescendantAdded:Connect(onAdded))
 
-	-- quét nền, chia nhỏ từng đợt để không bị đứng hình
 	task.spawn(function()
 		local n = 0
 		local function scan(list)
@@ -1358,9 +1319,9 @@ end
 ----------------------------------------------------------------
 -- BỘ DỰNG GIAO DIỆN: TRANG, HÀNG, NÚT
 ----------------------------------------------------------------
-local controls = {}  -- key -> { Refresh, Apply }: dùng cho khởi động + đặt lại mặc định
+local controls = {}
 local tabs = {}
-local refreshInfo = function() end  -- gán ở trang Info
+local refreshInfo = function() end
 
 local orders = setmetatable({}, { __mode = "k" })
 local function nxt(page)
@@ -1481,7 +1442,6 @@ local function row(page, labelText, initial)
 	}, f)
 end
 
--- công tắc bật/tắt gắn với CFG[key]
 local function addToggle(page, icon, text, key, apply)
 	local b = make("TextButton", {
 		Text = "",
@@ -1552,7 +1512,6 @@ local function addToggle(page, icon, text, key, apply)
 	refresh()
 end
 
--- bộ chỉnh số: nhấn 1 lần = 1 bước, giữ nút = chạy lặp
 local function addStepper(page, text, key, min, max, step, fmt, apply)
 	fmt = fmt or tostring
 	CFG[key] = math.clamp(CFG[key], min, max)
@@ -1617,9 +1576,8 @@ local function addStepper(page, text, key, min, max, step, fmt, apply)
 		save()
 	end
 
-	-- gõ số trực tiếp: bấm vào ô, gõ số, nhấn Enter hoặc bấm ra ngoài để áp dụng
 	valBox.Focused:Connect(function()
-		valBox.Text = tostring(CFG[key])  -- bỏ hậu tố (vd "m") để gõ số thuần cho dễ
+		valBox.Text = tostring(CFG[key])
 	end)
 	valBox.FocusLost:Connect(function(enterPressed)
 		local n = tonumber((valBox.Text:gsub("[^%-%d%.]", "")))
@@ -1728,7 +1686,6 @@ note(pEsp, "Roblox chỉ vẽ tối đa ~31 Highlight cùng lúc nên số mục
 ----------------------------------------------------------------
 local pMove = addTab(2, "MOVE", "⚡ MOVE")
 
--- công tắc cho tính năng ghi đè Humanoid, có báo lỗi khi chưa có nhân vật
 local function humApply(label, F)
 	return function(on)
 		F.Set(on)
@@ -1832,7 +1789,7 @@ task.spawn(function()
 			frames = 0
 			refreshInfo()
 		else
-			stopFps()  -- không xem Info thì không đếm gì cả
+			stopFps()
 		end
 	end
 end)
@@ -1899,7 +1856,6 @@ for _, s in ipairs(INFO.Socials) do
 	corner(copy, 8)
 
 	local function openLink()
-		-- luôn copy link để dự phòng (Roblox hay chặn mở web từ script)
 		local copied = type(setclipboard) == "function" and pcall(setclipboard, s.Link)
 		local opened = pcall(function()
 			GuiService:OpenBrowserWindow(s.Link)
@@ -1923,7 +1879,6 @@ for _, s in ipairs(INFO.Socials) do
 	f.MouseButton1Click:Connect(openLink)
 end
 
--- ===== Tác giả =====
 section(pInfo, "TÁC GIẢ")
 row(pInfo, "Hub", INFO.Author .. " • " .. INFO.Version)
 
@@ -1975,7 +1930,29 @@ addButton(pSet, "💾  LƯU NGAY", THEME.Accent2, Color3.fromRGB(4, 16, 26), fun
 end)
 addButton(pSet, "↺  ĐẶT LẠI MẶC ĐỊNH", Color3.fromRGB(46, 50, 66), Color3.new(1, 1, 1), resetAll)
 
-local unloadBtn = addButton(pSet, "⏻  GỠ HUB (UNLOAD)", THEME.Danger, Color3.new(1, 1, 1), function() end)
+local function unloadHub()
+	alive = false
+	_G.VuongHubUnload = nil
+
+	-- hoàn tác các tính năng
+	clearAll()
+	clearItems()
+	SpeedF.Stop()
+	JumpF.Stop()
+	NC.Set(false)
+	IJ.Set(false)
+	flyStop(true)
+	LAG.Restore()
+
+	-- gỡ kết nối + GUI
+	for _, c in ipairs(conns) do c:Disconnect() end
+	table.clear(conns)
+	gui:Destroy()
+end
+
+_G.VuongHubUnload = unloadHub
+
+local unloadBtn = addButton(pSet, "⏻  GỠ HUB (UNLOAD)", THEME.Danger, Color3.new(1, 1, 1), unloadHub)
 
 ----------------------------------------------------------------
 -- MỞ / ĐÓNG / THU NHỎ / GỠ HUB
@@ -1984,73 +1961,53 @@ local hubOpen = false
 
 local function showHub(state)
 	hubOpen = state
-	if state then
-		hub.Visible = true
-		hubScale.Scale = zoom * 0.85
-		TweenService:Create(hubScale, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = zoom }):Play()
-	else
-		local t = TweenService:Create(hubScale, TweenInfo.new(0.15), { Scale = zoom * 0.85 })
-		t:Play()
-		t.Completed:Once(function()
-			if not hubOpen then hub.Visible = false end
-		end)
+	hub.Visible = hubOpen
+	if hubOpen and minimized then
+		minimized = false
+		tw(hub, 0.2, { Size = UDim2.fromOffset(W, H_FULL) })
+		body.Visible = true
 	end
 end
 
-toggleHub = function() showHub(not hubOpen) end
-
-local function setMinimized(state)
-	minimized = state
-	body.Visible = not state
-	minBtn.Text = state and "+" or "_"
-	tw(hub, 0.25, { Size = UDim2.fromOffset(W, state and H_MIN or H_FULL) })
+toggleHub = function()
+	showHub(not hubOpen)
 end
 
-minBtn.MouseButton1Click:Connect(function() setMinimized(not minimized) end)
-closeBtn.MouseButton1Click:Connect(function() showHub(false) end)
+-- nút Logo điều khiển mở/đóng
+makeDraggable(open, open, function() toggleHub() end)
 
--- phím tắt trên PC
-track(UIS.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-	if input.KeyCode == TOGGLE_KEY then toggleHub() end
+minBtn.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	body.Visible = not minimized
+	tw(hub, 0.2, { Size = UDim2.fromOffset(W, minimized and H_MIN or H_FULL) })
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	showHub(false)
+end)
+
+-- Phím tắt toggle hub
+track(UIS.InputBegan:Connect(function(input, gpe)
+	if not gpe and input.KeyCode == TOGGLE_KEY then
+		toggleHub()
+	end
 end))
 
--- gỡ sạch toàn bộ hub: lưu cài đặt, trả mọi thứ về như cũ, xoá GUI
-local function unload()
-	if not alive then return end
-	writeNow()  -- lưu trạng thái hiện tại trước khi tắt các tính năng
-	alive = false
-	SpeedF.Stop()
-	JumpF.Stop()
-	NC.Set(false)
-	IJ.Set(false)
-	flyStop(true)
-	LAG.Restore()
-	ESP.Gen += 1
-	clearAll()
-	ITEM.Gen += 1
-	clearItems()
-	stopFps()
-	for _, c in ipairs(conns) do pcall(function() c:Disconnect() end) end
-	table.clear(conns)
-	gui:Destroy()
-	_G.VuongHubUnload = nil
+-- Kết nối hồi sinh nhân vật
+if p.Character then onCharacter(p.Character) end
+track(p.CharacterAdded:Connect(onCharacter))
+
+----------------------------------------------------------------
+-- KHỞI TẠO BAN ĐẦU
+----------------------------------------------------------------
+selectTab("ESP")
+applyZoom(CFG.zoom)
+
+-- Áp dụng các tính năng đã lưu trong CFG
+for _, c in pairs(controls) do
+	c.Apply()
 end
 
-_G.VuongHubUnload = unload
-unloadBtn.MouseButton1Click:Connect(unload)
-
-----------------------------------------------------------------
--- KHỞI ĐỘNG
-----------------------------------------------------------------
-applyZoom(CFG.zoom)
-for _, c in pairs(controls) do c.Refresh() end
-for _, c in pairs(controls) do c.Apply() end  -- áp dụng cài đặt đã lưu
-
-track(p.CharacterAdded:Connect(onCharacter))
-if p.Character then task.spawn(onCharacter, p.Character) end
-
-selectTab("ESP")
 booting = false
+setStatus("Sẵn sàng • V2.7 Edition")
 showHub(true)
-setStatus(canSave and "Ready • đã tải cài đặt" or "Ready")
