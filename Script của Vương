@@ -1,4 +1,4 @@
--- ☠ VƯƠNG HÓNG HỚT HUB — GAMING UI ☠  (v2.4)
+-- ☠ VƯƠNG HÓNG HỚT HUB — GAMING UI ☠  (v2.7)
 
 -- chạy lại script thì gỡ bản cũ trước, tránh bị chồng 2 hub
 if _G.VuongHubUnload then pcall(_G.VuongHubUnload) end
@@ -12,7 +12,7 @@ local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Stats = game:GetService("Stats")
 local Lighting = game:GetService("Lighting")
-local p = Players.LocalPlayer
+local p = Players.LocalPlayer or Players.PlayerAdded:Wait()  -- phòng khi script chạy quá sớm, lúc LocalPlayer chưa kịp gán
 
 -- theo dõi mọi kết nối của hub để gỡ sạch khi Unload
 local conns = {}
@@ -29,14 +29,23 @@ end
 -- true = bật hiệu ứng viền chạy màu + logo nhấp nháy (đẹp hơn nhưng tốn máy)
 local ANIMATIONS = false
 
-local LOGO_ID = ""  -- ID ảnh mèo chuối (Decal). Để trống thì dùng emoji 🍌
+-- Logo mèo nấm đã nhúng sẵn trong script (không cần upload gì cả).
+-- Logo mèo nấm: script tự tải ảnh từ GitHub của bạn khi chạy. Nếu tải lỗi (mất mạng, GitHub
+-- chặn...), tự chuyển sang logo nhúng sẵn trong script; nếu executor không hỗ trợ cả 2 cách
+-- thì tự chuyển sang emoji 🍌.
+-- LOGO_ID: nếu muốn dùng ảnh đã upload lên Roblox (ưu tiên cao nhất) thì điền ID vào đây.
+local LOGO_ID = ""
+local LOGO_URL = "https://raw.githubusercontent.com/vuongdeptrai90/random/refs/heads/main/logo.jpg"
+local LOGO_FILE = "VuongHub_Logo.png"
+local LOGO_WEB_FILE = "VuongHub_Logo_Web.jpg"
+local LOGO_B64 = "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"
 local TOGGLE_KEY = Enum.KeyCode.RightShift  -- phím bật/tắt hub trên PC
 local SAVE_FILE = "VuongHub_Settings.json"  -- file lưu cài đặt (nếu executor hỗ trợ)
 
 -- Thông tin của bạn: đã cập nhật đầy đủ mạng xã hội
 local INFO = {
 	Author = "Vương Hóng Hớt",
-	Version = "v2.4",
+	Version = "v2.7",
 	Socials = {
 		{ Icon = "🎵", Name = "TikTok", Link = "https://www.tiktok.com/@vuong_120309" },
 		{ Icon = "▶", Name = "YouTube", Link = "https://youtube.com/@vuonghothot?si=ymq17LP_tbpoMoCR" },
@@ -175,6 +184,81 @@ local function makeDraggable(obj, handle, onClick)
 	end))
 end
 
+-- giải mã base64 -> chuỗi byte (dùng để ghi logo PNG ra file)
+local B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+local function b64decode(s)
+	local map = {}
+	for i = 1, #B64_CHARS do map[B64_CHARS:byte(i)] = i - 1 end
+	local out, n = {}, 0
+	local buf, bits = 0, 0
+	for i = 1, #s do
+		local v = map[s:byte(i)]
+		if v then
+			buf = buf * 64 + v
+			bits += 6
+			if bits >= 8 then
+				bits -= 8
+				local div = 2 ^ bits
+				local byte = math.floor(buf / div)
+				buf = buf - byte * div
+				n += 1
+				out[n] = string.char(byte)
+			end
+		end
+	end
+	return table.concat(out)
+end
+
+-- lấy ảnh logo: ID Roblox (nếu có) > tải từ GitHub > logo nhúng sẵn > "" (rơi về emoji)
+local function httpGetBinary(url)
+	local req = (syn and syn.request) or http_request or request or fluxus_request
+	if req then
+		local ok, res = pcall(req, { Url = url, Method = "GET" })
+		if ok and res and (res.StatusCode == 200 or res.Success) and res.Body then
+			return res.Body
+		end
+		return nil
+	end
+	if game and game.HttpGet then
+		local ok, res = pcall(function() return game:HttpGet(url) end)
+		if ok and res and #res > 0 then return res end
+	end
+	return nil
+end
+
+-- lấy logo NGAY LẬP TỨC, không đụng mạng: ID Roblox (nếu có) > logo nhúng sẵn > "" (rơi về emoji)
+-- Quan trọng: hàm này KHÔNG được gọi HTTP, để hub luôn hiện ra ngay dù mạng chậm/treo.
+local function getLogoImageFast()
+	if LOGO_ID ~= "" then return "rbxassetid://" .. LOGO_ID end
+	local getAsset = getcustomasset or getsynasset
+	if type(writefile) ~= "function" or type(getAsset) ~= "function" then return "" end
+	local ok, res = pcall(function()
+		writefile(LOGO_FILE, b64decode(LOGO_B64))
+		return getAsset(LOGO_FILE)
+	end)
+	if ok and type(res) == "string" and res ~= "" then return res end
+	return ""
+end
+
+-- thử NÂNG CẤP logo bằng bản tải từ GitHub, chạy NGẦM (task.spawn) sau khi hub đã hiện.
+-- Có mạng chậm/treo/GitHub chặn cũng không ảnh hưởng gì tới hub vì chạy tách luồng riêng.
+local function upgradeLogoAsync(onReady)
+	if LOGO_ID ~= "" or LOGO_URL == "" then return end
+	local getAsset = getcustomasset or getsynasset
+	if type(writefile) ~= "function" or type(getAsset) ~= "function" then return end
+	task.spawn(function()
+		local ok, res = pcall(function()
+			local body = httpGetBinary(LOGO_URL)
+			if not body or #body < 50 then return nil end
+			writefile(LOGO_WEB_FILE, body)
+			return getAsset(LOGO_WEB_FILE)
+		end)
+		if ok and alive and type(res) == "string" and res ~= "" then
+			onReady(res)
+		end
+	end)
+end
+
 local toggleHub  -- gán ở cuối file
 
 ----------------------------------------------------------------
@@ -186,17 +270,20 @@ local gui = make("ScreenGui", {
 	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 }, p:WaitForChild("PlayerGui"))
 
+local logoImage = getLogoImageFast()
+local hasLogo = logoImage ~= ""
+
 local open = make("ImageButton", {
 	Name = "Logo",
-	Size = UDim2.fromOffset(52, 52),
-	Position = UDim2.new(0, 16, 0.5, -26),
-	BackgroundColor3 = Color3.fromRGB(255, 221, 51),
-	BackgroundTransparency = LOGO_ID ~= "" and 1 or 0,
-	Image = LOGO_ID ~= "" and ("rbxassetid://" .. LOGO_ID) or "",
+	Size = UDim2.fromOffset(56, 56),
+	Position = UDim2.new(0, 16, 0.5, -28),
+	BackgroundColor3 = hasLogo and THEME.Panel or Color3.fromRGB(255, 221, 51),
+	BackgroundTransparency = 0,
+	Image = logoImage,
 	ScaleType = Enum.ScaleType.Fit,
 	AutoButtonColor = false,
 }, gui)
-corner(open, 26)
+corner(open, 28)
 
 local logoStroke = make("UIStroke", { Color = THEME.Accent, Thickness = 2.5 }, open)
 if ANIMATIONS then
@@ -207,8 +294,9 @@ if ANIMATIONS then
 	):Play()
 end
 
-if LOGO_ID == "" then
-	make("TextLabel", {
+local emojiLbl
+if not hasLogo then
+	emojiLbl = make("TextLabel", {
 		Size = UDim2.fromScale(1, 1),
 		BackgroundTransparency = 1,
 		Text = "🍌",
@@ -218,6 +306,18 @@ end
 
 -- bấm logo = bật/tắt hub, kéo logo = di chuyển logo
 makeDraggable(open, open, function() toggleHub() end)
+
+-- thử nâng cấp logo bằng bản mới nhất từ GitHub, chạy ngầm phía sau — không chặn hub hiện ra
+upgradeLogoAsync(function(img)
+	open.Image = img
+	open.BackgroundColor3 = THEME.Panel
+	open.BackgroundTransparency = 0
+	if emojiLbl then
+		emojiLbl:Destroy()
+		emojiLbl = nil
+	end
+	hasLogo = true
+end)
 
 ----------------------------------------------------------------
 -- ESP (NPC + PLAYER)
@@ -1491,27 +1591,44 @@ local function addStepper(page, text, key, min, max, step, fmt, apply)
 	end
 
 	local plus = stepBtn("+", -6)
-	local valLbl = make("TextLabel", {
+	local valBox = make("TextBox", {
 		AnchorPoint = Vector2.new(1, 0.5),
 		Position = UDim2.new(1, -34, 0.5, 0),
 		Size = UDim2.fromOffset(52, 18),
-		BackgroundTransparency = 1,
+		BackgroundColor3 = Color3.fromRGB(30, 33, 46),
 		Font = Enum.Font.GothamBlack,
 		TextSize = 12,
 		TextColor3 = THEME.Accent,
+		ClearTextOnFocus = false,
+		PlaceholderText = tostring(min),
+		TextEditable = true,
 	}, f)
+	corner(valBox, 5)
 	local minus = stepBtn("-", -88)
 
-	local function refresh() valLbl.Text = fmt(CFG[key]) end
+	local function refresh() valBox.Text = fmt(CFG[key]) end
 
 	local function setV(v)
-		v = math.clamp(v, min, max)
-		if v == CFG[key] then return end
+		v = math.clamp(math.floor(v + 0.5), min, max)
+		if v == CFG[key] then refresh() return end
 		CFG[key] = v
 		refresh()
 		apply(v)
 		save()
 	end
+
+	-- gõ số trực tiếp: bấm vào ô, gõ số, nhấn Enter hoặc bấm ra ngoài để áp dụng
+	valBox.Focused:Connect(function()
+		valBox.Text = tostring(CFG[key])  -- bỏ hậu tố (vd "m") để gõ số thuần cho dễ
+	end)
+	valBox.FocusLost:Connect(function(enterPressed)
+		local n = tonumber((valBox.Text:gsub("[^%-%d%.]", "")))
+		if n then
+			setV(n)
+		else
+			refresh()
+		end
+	end)
 
 	local function holdRepeat(btn, delta)
 		local token = 0
