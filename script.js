@@ -71,7 +71,7 @@ window.addEventListener("DOMContentLoaded", () => {
 function redirectToGetLink() {
   playSound('click');
   showToast("🔗 Đang chuyển hướng sang trang vượt link...");
-  window.location.href = "https://link4m.org/401ScXi6";
+  window.location.href = "https://link4m.org/PG4XgJ";
 }
 
 /* ==================== ĐIỂM DANH HÀNG NGÀY ==================== */
