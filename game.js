@@ -2,27 +2,47 @@
 const canvas = document.getElementById("birdGame");
 const ctx = canvas.getContext("2d");
 
-let bird = { 
-  x: 50, 
-  y: 120, 
-  radius: 14, 
-  velocity: 0, 
-  gravity: 0.25, 
-  jump: -4.5 
+let bird = {
+  x: 50,
+  y: 120,
+  radius: 14,
+  velocity: 0,
+  gravity: 0.25,
+  jump: -4.5
 };
 let pipes = [];
 let score = 0;
-let highScore = localStorage.getItem("flappyHighScore") || 0;
-let gameOver = false;
-let frameCount = 0;
+let highScore = 0;
+try { highScore = parseInt(localStorage.getItem("flappyHighScore")) || 0; } catch (e) {}
 
-document.addEventListener("keydown", function(e) { if (e.code === "Space") flap(); });
-canvas.addEventListener("touchstart", function(e) { e.preventDefault(); flap(); });
+let gameOver = false;
+let started = false;
+let spawnTimer = 0;
+let gameOverTime = 0;
+
+document.addEventListener("keydown", function (e) {
+  if (e.code === "Space") {
+    e.preventDefault();
+    if (!e.repeat) flap();
+  }
+});
+canvas.addEventListener("touchstart", function (e) { e.preventDefault(); flap(); });
 canvas.addEventListener("mousedown", flap);
 
 function flap() {
-  if (gameOver) { resetFlappy(); return; }
+  if (gameOver) {
+    if (performance.now() - gameOverTime > 500) resetFlappy();
+    return;
+  }
+  started = true;
   bird.velocity = bird.jump;
+}
+
+function die() {
+  if (gameOver) return;
+  gameOver = true;
+  gameOverTime = performance.now();
+  playSound('hit');
 }
 
 function resetFlappy() {
@@ -31,24 +51,22 @@ function resetFlappy() {
   bird.velocity = 0;
   pipes = [];
   score = 0;
-  frameCount = 0;
+  spawnTimer = 0;
+  started = false;
   gameOver = false;
 }
 
-function updateFlappy() {
-  if (gameOver) return;
+function updateFlappy(dt) {
+  if (gameOver || !started) return;
 
-  bird.velocity += bird.gravity;
-  bird.y += bird.velocity;
+  bird.velocity += bird.gravity * dt;
+  bird.y += bird.velocity * dt;
 
-  if (bird.y + bird.radius >= canvas.height || bird.y - bird.radius <= 0) {
-    gameOver = true;
-    playSound('hit');
-  }
+  if (bird.y + bird.radius >= canvas.height || bird.y - bird.radius <= 0) die();
 
-  frameCount++;
-
-  if (frameCount % 85 === 0) {
+  spawnTimer += dt;
+  if (spawnTimer >= 85) {
+    spawnTimer = 0;
     let gap = 100;
     let minPipe = 30;
     let topHeight = Math.floor(Math.random() * (canvas.height - gap - minPipe * 2)) + minPipe;
@@ -60,30 +78,26 @@ function updateFlappy() {
     });
   }
 
-  for (let i = 0; i < pipes.length; i++) {
-    let p = pipes[i];
-    p.x -= 2;
+  for (let p of pipes) {
+    p.x -= 2 * dt;
 
     if (
-      bird.x + bird.radius > p.x &&
-      bird.x - bird.radius < p.x + 35 &&
+      bird.x + bird.radius > p.x - 3 &&
+      bird.x - bird.radius < p.x + 38 &&
       (bird.y - bird.radius < p.top || bird.y + bird.radius > canvas.height - p.bottom)
-    ) {
-      gameOver = true;
-      playSound('hit');
-    }
+    ) die();
 
     if (!p.passed && p.x + 35 < bird.x) {
       p.passed = true;
       score++;
       if (score > highScore) {
         highScore = score;
-        localStorage.setItem("flappyHighScore", highScore);
+        try { localStorage.setItem("flappyHighScore", highScore); } catch (e) {}
       }
     }
   }
 
-  pipes = pipes.filter(p => p.x > -35);
+  pipes = pipes.filter(p => p.x > -40);
 }
 
 function drawMushroomCat(x, y, velocity) {
@@ -185,15 +199,23 @@ function drawFlappy() {
   ctx.fillText("Kỷ lục: " + highScore, 10, 45);
   ctx.shadowBlur = 0;
 
+  if (!started && !gameOver) {
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 14px Poppins";
+    ctx.textAlign = "center";
+    ctx.fillText("Chạm để bắt đầu", canvas.width / 2, 190);
+    ctx.textAlign = "left";
+  }
+
   if (gameOver) {
     ctx.fillStyle = "rgba(0,0,0,0.6)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     ctx.fillStyle = "#ff4757";
     ctx.font = "bold 20px Poppins";
     ctx.textAlign = "center";
     ctx.fillText("GAME OVER!", canvas.width / 2, 140);
-    
+
     ctx.fillStyle = "#fff";
     ctx.font = "12px Poppins";
     ctx.fillText("Điểm: " + score + " | Kỷ lục: " + highScore, canvas.width / 2, 170);
@@ -202,10 +224,12 @@ function drawFlappy() {
   }
 }
 
-function gameLoop() {
-  updateFlappy();
+let lastTime = performance.now();
+function gameLoop(now) {
+  const dt = Math.min((now - lastTime) / 16.67, 2); // 1 = một frame ở 60Hz
+  lastTime = now;
+  updateFlappy(dt);
   drawFlappy();
   requestAnimationFrame(gameLoop);
 }
-
-gameLoop();
+requestAnimationFrame(gameLoop);
