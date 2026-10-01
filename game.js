@@ -40,6 +40,17 @@ for (let i = 0; i < 4; i++) {
 /* ---------- Tiện ích ---------- */
 function safeSound(name) { try { playSound(name); } catch (e) {} }
 
+// ---------- Nhạc nền (đặt file theme.mp3 cạnh index.html) ----------
+const bgm = new Audio("theme.mp3");
+bgm.loop = true;
+bgm.volume = 0.4;
+function startBgm() { bgm.play().catch(function () {}); }
+function stopBgm() { bgm.pause(); bgm.currentTime = 0; }
+document.addEventListener("visibilitychange", function () {
+  if (document.hidden) bgm.pause();
+  else if (started && !gameOver) startBgm();
+});
+
 function hexToRgb(h) {
   return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 }
@@ -79,6 +90,7 @@ function flap() {
     return;
   }
   started = true;
+  startBgm();
   bird.velocity = bird.jump;
   spawnParticles(bird.x - 10, bird.y + 8, 3, ["#ffffff", "#dfe6e9"], 1);
 }
@@ -86,6 +98,7 @@ function flap() {
 function die() {
   if (gameOver) return;
   gameOver = true;
+  stopBgm();
   gameOverTime = performance.now();
   shake = 12;
   flash = 1;
